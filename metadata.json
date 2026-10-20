@@ -1,0 +1,6 @@
+{
+  "name": "GYCS Crew Hub",
+  "description": "Member career coaching platform for Green Yacht Crew Solutions: guided career pathways, verified qualifications, structured CV studio, coaching, and employment support for South African yacht crew.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

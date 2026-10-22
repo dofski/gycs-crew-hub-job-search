@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {cleanIntake,validateAssist,validateProposal} from '../shared/ai-contract.mjs';
+test('contact fields and credentials are not included automatically',()=>{const d=cleanIntake({goals:'Deck career',apiKey:'secret',email:'private@example.com',phone:'123'});assert.equal(d.goals,'Deck career');assert.equal(d.apiKey,undefined);assert.equal(d.email,undefined);assert.equal(d.phone,undefined);});
+test('intake limits and types',()=>{assert.throws(()=>cleanIntake({goals:'x'.repeat(2001)}));assert.throws(()=>cleanIntake({goals:{role:'admin'}}));assert.throws(()=>cleanIntake([]));});
+test('assistant cannot suggest privileged profile fields',()=>assert.throws(()=>validateAssist({reply:'Hi',questions:[],suggestions:[{field:'role',value:'admin',reason:'test'}]})));
+test('assistant edits are restricted to intake fields',()=>assert.equal(validateAssist({reply:'Tell me more',questions:['What experience?'],suggestions:[{field:'goals',value:'Explore deck work',reason:'Clarify the goal'}]}).suggestions[0].field,'goals'));
+const plan={department:'deck',target_role:'Entry-level deck role',summary:'An unapproved draft',milestones:[{title:'Discuss goals',description:'Review your goals with a coach',evidence_required:'Coach discussion'}],questions_for_coach:[],limitations:['Needs review']};
+test('valid plan remains data without approval fields',()=>{const p=validateProposal({...plan,status:'approved',approved_by:'attacker'});assert.equal(p.status,undefined);assert.equal(p.approved_by,undefined);assert.equal(p.department,'deck');});
+test('reject invalid departments and missing milestones',()=>{assert.throws(()=>validateProposal({...plan,department:'admin'}));assert.throws(()=>validateProposal({...plan,milestones:[]}));});

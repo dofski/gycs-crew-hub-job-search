@@ -6,10 +6,19 @@ type Icp = {id: string; tab: string; eyebrow: string; hook: string; pain: string
 type Props = {session: boolean; canStart: boolean; onStart: () => void; onSignIn: () => void; video: React.ReactNode};
 
 const icps: Icp[] = [
-  {id: 'school-leaver', tab: 'School leavers', eyebrow: 'JUST FINISHED SCHOOL', hook: 'Yachting sounds incredible. But where do you actually start?', pain: 'Courses, medicals, CVs, dockwalking, crew agencies — the advice online is endless and often contradictory. Before you spend money on training or flights, get clear on whether yachting suits you and what a sensible first step looks like.', stages: [['Explore the industry', 'Learn what entry-level deck and interior roles really involve, day to day.'], ['Book your discovery call', 'Talk through your goals, budget and timing with a GYCS coach.'], ['Get your first-step plan', 'Leave with clear priorities for entry-level training and preparation.'], ['Prepare in the Crew Hub', 'If coaching is a fit, track your plan, CV and readiness in one place.']], covers: ['Whether yachting fits your goals and lifestyle', 'Which entry-level training to research first, such as STCW Basic Safety Training and an ENG1 medical', 'Realistic costs and timing to plan for', 'What not to spend money on too early'], cta: 'Book my first-step call'},
-  {id: 'career-changer', tab: 'Career changers', eyebrow: 'READY FOR A CHANGE', hook: 'Your experience counts. Let’s show you how to use it onboard.', pain: 'Hospitality, trades, culinary, fitness and customer-facing skills can transfer to yacht roles — but changing careers is a financial decision. You need a plan that respects your current income, commitments and timing.', stages: [['Map your skills', 'Identify which existing skills translate to deck, interior, galley or engineering.'], ['Book your discovery call', 'Discuss timing, finances and the department that suits your background.'], ['Plan the transition', 'Get a staged plan for training, CV repositioning and when to make the move.'], ['Build your yacht CV', 'Reframe your experience for yacht recruiters inside the Crew Hub.']], covers: ['Which department best suits your background', 'How to position transferable experience on a yacht CV', 'A transition timeline that fits your finances', 'Training priorities versus nice-to-haves'], cta: 'Book my career-change call'},
-  {id: 'aspirant', tab: 'Ambitious but unsure', eyebrow: 'MOTIVATED, NO PLAN YET', hook: 'You’ve watched the videos. Now you need a plan.', pain: 'Plenty of motivation, scattered information. Without structure it’s easy to stall, overspend on the wrong courses or apply before you’re ready. Coaching turns ambition into an ordered set of next steps.', stages: [['Name the goal', 'Clarify the role, department and season you are aiming for.'], ['Book your discovery call', 'Work through what’s holding you back with a coach.'], ['Get a structured roadmap', 'Turn your goals into a sequenced plan with checkpoints.'], ['Stay accountable', 'Use the Crew Hub and coaching check-ins to keep momentum.']], covers: ['Turning a vague goal into a specific target role', 'The right order for training, documents and your CV', 'Common early mistakes that waste time and money', 'What structured coaching support could look like for you'], cta: 'Book my roadmap call'},
-  {id: 'junior-crew', tab: 'Junior crew', eyebrow: 'ALREADY ONBOARD', hook: 'A season or two in. What’s your next move?', pain: 'Time served alone doesn’t decide your next role. Captains and recruiters look for demonstrated responsibility, relevant vessel experience and the right qualifications. Between contracts is the moment to get clear on what you’re ready for.', stages: [['Take stock', 'Review your sea time, responsibilities and references honestly.'], ['Book your discovery call', 'Discuss realistic next roles and what it takes to get there.'], ['Plan your progression', 'Prioritise qualifications, experience gaps and CV updates.'], ['Position yourself', 'Refresh your CV and track your progression in the Crew Hub.']], covers: ['Which next role you are realistically ready for', 'Qualification and experience gaps to close', 'How to show progression on your CV', 'Planning your next contract or season'], cta: 'Book my progression call'}
+  {id: 'school-leaver', tab: 'Leaving school', eyebrow: 'FIRST YACHT ROLE', hook: 'Leaving school and looking for your first yacht role?', pain: 'You don’t need to pretend you’ve already worked at sea. Start by exploring suitable roles, identifying what you need to verify and finding honest examples of responsibility in your work, sport or school experience.', stages: [['Explore suitable roles', 'Learn what entry-level deck and interior roles really involve, day to day.'], ['Book your discovery call', 'Talk through your goals, budget and timing with Chad.'], ['Get your first-step plan', 'Leave with clear priorities for entry-level training and preparation.'], ['Prepare in the Crew Hub', 'If coaching is a fit, track your plan, CV and readiness in one place.']], covers: ['Whether yachting fits your goals and lifestyle', 'Which entry-level training to research first, such as STCW Basic Safety Training and an ENG1 medical', 'Realistic costs and timing to plan for', 'What not to spend money on too early'], cta: 'Book my first-step call'},
+  {id: 'career-changer', tab: 'Changing careers', eyebrow: 'FROM ANOTHER INDUSTRY', hook: 'Changing careers from another industry?', pain: 'Your working life doesn’t disappear because you’re new to yachting. Connect the experience you already have to your target role, while being clear about the practical skills and maritime experience you still need to develop.', stages: [['Map your experience', 'Identify which existing skills translate to deck, interior, galley or engineering.'], ['Book your discovery call', 'Discuss timing, finances and the department that suits your background.'], ['Plan the transition', 'Get a staged plan for training, CV repositioning and when to make the move.'], ['Build your yacht CV', 'Reframe your experience for yacht recruiters inside the Crew Hub.']], covers: ['Which department best suits your background', 'How to position transferable experience on a yacht CV', 'A transition timeline that fits your finances', 'Training priorities versus nice-to-haves'], cta: 'Book my career-change call'},
+  {id: 'aspirant', tab: 'Stuck in research', eyebrow: 'KEEN TO ENTER YACHTING', hook: 'Keen to enter yachting, but stuck in research?', pain: 'Before you resign, book flights or choose a training package, put your options in order. Explore role fit, preparation costs and a realistic timeline around your current commitments.', stages: [['Name the goal', 'Clarify the role, department and season you are aiming for.'], ['Book your discovery call', 'Work through what’s holding you back with Chad.'], ['Get a structured roadmap', 'Turn your goals into a sequenced plan with checkpoints.'], ['Stay accountable', 'Use the Crew Hub and coaching check-ins to keep momentum.']], covers: ['Turning a vague goal into a specific target role', 'The right order for training, documents and your CV', 'Common early mistakes that waste time and money', 'What structured coaching support could look like for you'], cta: 'Book my roadmap call'},
+  {id: 'junior-crew', tab: 'Already crew', eyebrow: 'READY FOR MORE', hook: 'Already crew, but ready for more?', pain: 'Make your next contract a deliberate career decision. Identify the responsibility you want, the evidence you can show and the development that belongs between your current role and your next one.', stages: [['Take stock', 'Review your sea time, responsibilities and references honestly.'], ['Book your discovery call', 'Discuss realistic next roles and what it takes to get there.'], ['Plan your progression', 'Prioritise qualifications, experience gaps and CV updates.'], ['Position yourself', 'Refresh your CV and track your progression in the Crew Hub.']], covers: ['Which next role you are realistically ready for', 'Qualification and experience gaps to close', 'How to show progression on your CV', 'Planning your next contract or season'], cta: 'Book my progression call'}
+];
+
+const method: [string, string][] = [
+  ['Assess your starting point.', 'Look at your goals, experience, circumstances and preferred type of work. Give your preparation a direction before committing to a route.'],
+  ['Plan your priorities.', 'Put the decisions in order: role, requirements to verify, budget, timing and next actions. Separate what needs attention now from what can wait.'],
+  ['Prepare for the gaps.', 'Identify what needs further checking, practical development or formal training. Keep required qualifications separate from optional development and personal strengths.'],
+  ['Present your experience.', 'Build a clear, truthful account of what you’ve done, what you can demonstrate and what you’re ready to learn. No invented sea time. No inflated responsibilities.'],
+  ['Pursue suitable opportunities.', 'Give your job search a routine. Keep track of relevant vacancies, contacts, applications and follow-ups instead of relying on memory and screenshots.'],
+  ['Review your next move.', 'Revisit the plan as your circumstances change. Use actual feedback and progress to decide what needs adjusting.']
 ];
 
 const reviews: [string, string, string][] = [
@@ -51,18 +60,23 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
   const book = (id?: string) => { if (id) setChosen(id); jump('book-call'); };
   return <>
     <section className="gy-hero"><div>
-      <p className="gy-eyebrow">YACHT CAREER COACHING · DISCOVERY CALLS OPEN</p>
-      <h1>Your yacht career.<br/><em>Planned, not guessed.</em></h1>
-      <p className="gy-lead">Whether you’re leaving school, changing careers or already onboard, Green Yacht Crew Solutions coaching helps you choose the right first or next step — before you spend on courses, flights or applications.</p>
-      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book a discovery call ↓</button><button className="gy-outline" disabled={!canStart} onClick={onStart}>{session ? 'Continue your journey' : 'Start your application'}</button>{!session && <button className="gy-link" onClick={onSignIn}>Member sign in</button>}</div>
-      <p className="gy-small">Coached by Chad de Wet, former superyacht Chief Officer. <button className="gy-link" onClick={() => jump('reviews')}>Read 13 crew reviews</button></p>
-      <p className="gy-small">Pick a time that suits your timezone. Coaching supports your preparation; it does not guarantee employment.</p>
+      <p className="gy-eyebrow">FIND YOUR DIRECTION. PRIORITISE YOUR PREPARATION. PRESENT YOUR VALUE. ORGANISE YOUR SEARCH.</p>
+      <h1>Your yacht career needs a clear next step.<br/><em>Not another conflicting opinion.</em></h1>
+      <p className="gy-lead">Chad's Coaching helps you make sense of your options, identify preparation priorities and present your experience honestly—so your next move is a considered decision, not another guess.</p>
+      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call ↓</button><button className="gy-outline" disabled={!canStart} onClick={onStart}>{session ? 'Continue your journey' : 'Start your application'}</button>{!session && <button className="gy-link" onClick={onSignIn}>Member sign in</button>}</div>
+      <p className="gy-small">Tell us where you’re starting. Let’s explore what support makes sense.</p>
+      <p className="gy-small">Coached by Chad de Wet. <button className="gy-link" onClick={() => jump('reviews')}>Read 13 crew reviews</button></p>
     </div>{video}</section>
+
+    <section className="gy-section" aria-labelledby="problem-title">
+      <p className="gy-eyebrow">SOUND FAMILIAR?</p>
+      <h2 id="problem-title">Plenty of advice. Still unsure what to do next?</h2>
+      <p className="gy-lead">You’ve read the guides, compared courses and looked at yacht jobs. But the questions that matter are still unanswered. Which role fits you? What do you need before you apply? How do you show your value without yacht experience—or prove you’re ready for more responsibility when you already have it? The next step isn’t always another course, another CV template or another batch of applications. Start by understanding which problem you actually need to solve.</p>
+    </section>
 
     <section className="gy-section" aria-labelledby="pathways-title">
       <p className="gy-eyebrow">FIND YOUR PATHWAY</p>
-      <h2 id="pathways-title">Where are you starting from?</h2>
-      <p>Pick the description closest to you. Every pathway leads to the same first step: a discovery call with a GYCS coach.</p>
+      <h2 id="pathways-title">Start with the situation that sounds like you.</h2>
       <div className="gy-tabs" role="tablist" aria-label="Choose your starting point">{icps.map(i => <button key={i.id} role="tab" id={`tab-${i.id}`} aria-controls="pathway-panel" aria-selected={i.id === active} onClick={() => setActive(i.id)}>{i.tab}</button>)}</div>
       <div className="gy-pathway" role="tabpanel" id="pathway-panel" aria-labelledby={`tab-${icp.id}`}>
         <div>
@@ -76,9 +90,16 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
           <h3>On your discovery call we’ll cover</h3>
           <ul className="gy-ticks">{icp.covers.map(c => <li key={c}>{c}</li>)}</ul>
           <p className="gy-small">Not sure which description fits? Book anyway — working that out is part of the call.</p>
-          <button className="gy-outline" onClick={() => book(icp.id)}>Choose a time</button>
+          <button className="gy-outline" onClick={() => book(icp.id)}>Book My Discovery Call</button>
         </aside>
       </div>
+    </section>
+
+    <section className="gy-section" aria-labelledby="method-title">
+      <p className="gy-eyebrow">HOW CHAD’S COACHING WORKS</p>
+      <h2 id="method-title">From starting point to next move.</h2>
+      <div className="gy-grid gy-grid-3">{method.map(([t, d], n) => <article className="gy-card" key={t}><span className="gy-eyebrow">{String(n + 1).padStart(2, '0')}</span><h3>{t}</h3><p>{d}</p></article>)}</div>
+      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call</button></div>
     </section>
 
     <section className="gy-section gy-about" id="about-coach" aria-labelledby="about-title">
@@ -98,18 +119,12 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
       </aside>
     </section>
 
-    <section className="gy-section">
-      <p className="gy-eyebrow">WHAT TO EXPECT</p>
-      <h2>One call. A clear next step.</h2>
-      <div className="gy-grid">{[['01', 'Pick a time', 'Choose a slot in the booking calendar below.'], ['02', 'Share your situation', 'Tell us your goals, experience, budget and timing.'], ['03', 'Get honest guidance', 'What’s realistic, what to do first and what to skip.'], ['04', 'Decide your next step', 'If coaching is a fit, we’ll explain the options. No pressure to commit on the call.']].map(([n, t, d]) => <article className="gy-card" key={n}><span className="gy-eyebrow">{n}</span><h3>{t}</h3><p>{d}</p></article>)}</div>
-    </section>
-
     <section className="gy-section" id="reviews" aria-labelledby="reviews-title">
       <p className="gy-eyebrow">WHAT CREW SAY</p>
       <h2 id="reviews-title">13 reviews from crew Chad has worked with.</h2>
       <div className="gy-reviews">{reviews.map(([name, role, text]) => <figure className="gy-review" key={name}><blockquote>{text}</blockquote><figcaption>{name}<span>{role}</span></figcaption></figure>)}</div>
       <p className="gy-small">Reviews shared by clients on chaddewet.com and shown as written. Individual experiences vary; coaching does not guarantee employment.</p>
-      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book your discovery call</button></div>
+      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call</button></div>
     </section>
 
     <section className="gy-section">
@@ -122,10 +137,10 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
     <section className="gy-section gy-book" id="book-call" aria-labelledby="book-title">
       <div>
         <p className="gy-eyebrow">BOOK YOUR DISCOVERY CALL</p>
-        <h2 id="book-title">Choose a time to talk.</h2>
-        <p>Pick a slot that works for your timezone. The booking calendar confirms your call once it’s scheduled.</p>
-        {chosenIcp && <p className="gy-notice" role="status">You selected the <strong>{chosenIcp.tab}</strong> pathway. Mention it in your booking so your coach can prepare.</p>}
-        <ul className="gy-ticks"><li>Bring your questions about training, costs and timing</li><li>Have a rough idea of your availability for the coming months</li><li>No passport, medical or banking details needed</li></ul>
+        <h2 id="book-title">Tell us where you’re starting.</h2>
+        <p>Let’s explore what support makes sense. Pick a slot that works for your timezone; the booking calendar confirms your call once it’s scheduled.</p>
+        {chosenIcp && <p className="gy-notice" role="status">You selected <strong>{chosenIcp.tab}</strong>. Mention it in your booking so Chad can prepare.</p>}
+        <ul className="gy-ticks"><li>Bring your questions about roles, training, costs and timing</li><li>Have a rough idea of your availability for the coming months</li><li>No passport, medical or banking details needed</li></ul>
         <p className="gy-small">If the calendar doesn’t load, refresh the page or pause content blockers for this site.</p>
       </div>
       <div className="gy-book-frame"><Booking/></div>
@@ -133,8 +148,8 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
 
     <section className="gy-section gy-faq">
       <h2>Questions before you book</h2>
-      <details><summary>Who are discovery calls for?</summary><p>School leavers, career changers, motivated beginners without a plan and junior crew deciding on their next role. If you’re considering a yacht career, you’re in the right place.</p></details>
-      <details><summary>Who will I speak to?</summary><p>Discovery calls are with Chad de Wet, founder of Green Yacht Crew Solutions and a former superyacht Chief Officer.</p></details>
+      <details><summary>Who are discovery calls for?</summary><p>School leavers, career changers, people stuck in research and crew who are ready for more responsibility. If you’re considering or progressing a yacht career, you’re in the right place.</p></details>
+      <details><summary>Who will I speak to?</summary><p>Discovery calls are with Chad de Wet, founder of Green Yacht Crew Solutions.</p></details>
       <details><summary>Does booking a call or coaching guarantee a job?</summary><p>No. Coaching helps you prepare and make better decisions. Hiring decisions are made by captains, management companies and recruiters, and no qualification, visa or job offer is implied.</p></details>
       <details><summary>Do I need yachting experience?</summary><p>No. Beginners, career changers and experienced crew can all book. Your answers help establish an appropriate next step.</p></details>
       <details><summary>What happens after the call?</summary><p>You leave with a clear next step. If coaching is a good fit, we explain how it works and what’s involved; any programme, delivery arrangements or costs are agreed separately.</p></details>
@@ -144,10 +159,10 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
 
     <section className="gy-band">
       <p className="gy-eyebrow">YOUR NEXT CHAPTER</p>
-      <h2>Ready to plan your yacht career properly?</h2>
-      <p>One conversation can save you months of guesswork and money spent on the wrong things.</p>
-      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book a discovery call</button><button className="gy-outline" disabled={!canStart} onClick={onStart}>{session ? 'Continue your journey' : 'Start your application'}</button></div>
+      <h2>Make your next move a considered decision, not another guess.</h2>
+      <p>Tell us where you’re starting. Let’s explore what support makes sense.</p>
+      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call</button><button className="gy-outline" disabled={!canStart} onClick={onStart}>{session ? 'Continue your journey' : 'Start your application'}</button></div>
     </section>
-    <button className="gy-primary gy-sticky" onClick={() => book()}>Book a discovery call</button>
+    <button className="gy-primary gy-sticky" onClick={() => book()}>Book My Discovery Call</button>
   </>;
 }

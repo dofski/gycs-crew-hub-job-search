@@ -12,6 +12,22 @@ const icps: Icp[] = [
   {id: 'junior-crew', tab: 'Junior crew', eyebrow: 'ALREADY ONBOARD', hook: 'A season or two in. What’s your next move?', pain: 'Time served alone doesn’t decide your next role. Captains and recruiters look for demonstrated responsibility, relevant vessel experience and the right qualifications. Between contracts is the moment to get clear on what you’re ready for.', stages: [['Take stock', 'Review your sea time, responsibilities and references honestly.'], ['Book your discovery call', 'Discuss realistic next roles and what it takes to get there.'], ['Plan your progression', 'Prioritise qualifications, experience gaps and CV updates.'], ['Position yourself', 'Refresh your CV and track your progression in the Crew Hub.']], covers: ['Which next role you are realistically ready for', 'Qualification and experience gaps to close', 'How to show progression on your CV', 'Planning your next contract or season'], cta: 'Book my progression call'}
 ];
 
+const reviews: [string, string, string][] = [
+  ["Ellen Kay-Shuttleworth", "Junior Stewardess", "Chad has designed an innovative and modern approach to finding a job onboard. I have full faith in him and his programme, anyone who is having doubts about how to find a job abroad - give Chad a call. He is passionate about helping you and I promise you won't regret it. Much love!"],
+  ["Samuel Martins", "Junior Deckhand", "EDIT: I've landed my first job literally less than 24 hours after my meeting with Chad! His interview tips definitely helped me secure the position. Once again. highly recommend his services! Chad is an industry veteran. He is very knowledgable, he cares about his clients, and he genuinely wants to help new crew. Coming into the industry can be very overwhelming, and Chad is an expert to help navigate what exactly to avoid and what you want to get out of working in this industry"],
+  ["Mj Strauss", "Junior Deckhand", "I joined Chad’s program as a “greenie” about three weeks ago. Up until now I had an amazing experience and already learned a lot. Couldn’t ask for a better life coach! I would highly recommend this program for anyone that wants to enter the industry."],
+  ["Dani Lynn", "Lifestyle Marketer", "This guy right here!!!! BOMB. If you need any help or guidance (and I mean straight up, no beating around the bush guidance) you are at the right place! Listen, ask questions, and follow. He will help get you on the right path."],
+  ["Gareth Mark Toerien", "Junior Deckhand", "Chad is an excellent learning facilitator, his classes are well structured and extremely informative. Anyone looking at getting into yachting should defiantly give him a shout, it is totally worth tour while, he even gives avenues and insights for you to pursue in future ventures Too bloke. Highly recommended"],
+  ["Liam OSullivan", "Junior Deckhand", "Chad is a awesome guy and is really helpful with everything he does . His courses are very well run and he puts you in the best position you can be in to find a job . He goes completely out his way to benefit you . Thanks Chad"],
+  ["Liam Davern Caffery", "Junior Deckhand", "I highly recommend Chad's course as it takes a fresh and modern take on finding a job and presenting yourself in the digital space. His experience and skills are invaluable!"],
+  ["Cullen Wright", "Junior Deckhand", "Highly recommendable. Everything you need to know about getting a job and keeping it is covered in Chad’s courses which is invaluable information if you have limited experience. Definitely worth it and going to recommend to my mates that want to start out in the industry!"],
+  ["Bizel ßv", "Commercial Officer", "This is a man with insight and innovation in a industry that is lacking this sort of initiative, I have been fortunate to meet and connect with Chad and what he is all about. He has great ideas moving forward and all make sense the way he connects each one. I told him no agency yet has got me a job and in his own words said 'Its because they lack vision!' and they do…"],
+  ["Dayn Bruwer", "Experienced Bosun - In Couple", "Working with Chad is a great experience!!.He delivers the exact service that he advertises.I definitely prefer working with him if you are looking to land a job onboard."],
+  ["Jadon Ferrier", "Junior Deckhand", "What a great experience. I have so much respect for Chad! He is an amazing guy, helpful and straightforward, nothing gets sugarcoated. You can see Chad’s passion in his work, his intensions is truly to give the best advice he possibly can. Highly recommend Chad’s service every second worth it Just want to give a huge thanks to you Chad for all your help!"],
+  ["Afrika Masuku", "Chief Officer", "It is my pleasure to offer my unreserved recommendation for Chad for someone who is looking to start in the yachting industry. He has always demonstrated responsibility, and he has an exceptional expertise in leadership, coaching and motivation. If l may expand further, Chad has extensive strategies along with solid social media skills. I would welcome the opportunity to work with Chad again. #Loyal #insightful"],
+  ["Noemi Santiago", "Junior Stewardess", "This is so informative. I thought I knew a little of what exactly you need to get into the yachting industry, but wow this really opened my eyes. I am so happy I read this. From start to finish there is so much information and step by step, of what is needed, and what you need to do. I wish I would have had this information before I started my courses, because it would have made my life so much easier. I am happy I have this now. Thank you for this information…"]
+];
+
 function Booking() {
   useEffect(() => {
     const id = 'gycs-ghl-form-embed';
@@ -28,17 +44,18 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
   const [chosen, setChosen] = useState('');
   const icp = icps.find(i => i.id === active) || icps[0];
   const chosenIcp = icps.find(i => i.id === chosen);
-  const book = (id?: string) => {
-    if (id) setChosen(id);
+  const jump = (target: string) => {
     const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.getElementById('book-call')?.scrollIntoView({behavior: smooth ? 'smooth' : 'auto', block: 'start'});
+    document.getElementById(target)?.scrollIntoView({behavior: smooth ? 'smooth' : 'auto', block: 'start'});
   };
+  const book = (id?: string) => { if (id) setChosen(id); jump('book-call'); };
   return <>
     <section className="gy-hero"><div>
       <p className="gy-eyebrow">YACHT CAREER COACHING · DISCOVERY CALLS OPEN</p>
       <h1>Your yacht career.<br/><em>Planned, not guessed.</em></h1>
       <p className="gy-lead">Whether you’re leaving school, changing careers or already onboard, Green Yacht Crew Solutions coaching helps you choose the right first or next step — before you spend on courses, flights or applications.</p>
       <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book a discovery call ↓</button><button className="gy-outline" disabled={!canStart} onClick={onStart}>{session ? 'Continue your journey' : 'Start your application'}</button>{!session && <button className="gy-link" onClick={onSignIn}>Member sign in</button>}</div>
+      <p className="gy-small">Coached by Chad de Wet, former superyacht Chief Officer. <button className="gy-link" onClick={() => jump('reviews')}>Read 13 crew reviews</button></p>
       <p className="gy-small">Pick a time that suits your timezone. Coaching supports your preparation; it does not guarantee employment.</p>
     </div>{video}</section>
 
@@ -64,10 +81,35 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
       </div>
     </section>
 
+    <section className="gy-section gy-about" id="about-coach" aria-labelledby="about-title">
+      <div>
+        <p className="gy-eyebrow">ABOUT YOUR COACH</p>
+        <h2 id="about-title">Meet Chad de Wet.</h2>
+        <p className="gy-about-lead">Chad didn’t learn yachting from a brochure. He learned it the way you will — starting at the bottom of the deck team.</p>
+        <p>His career began in 2013 as a deckhand and tender driver on the 67m M/Y Golden Shadow in French Polynesia, where he was diver top man on a coral-reef research programme, keeping up to ten divers safe, five dives a day.</p>
+        <p>He worked his way up: three Mediterranean seasons on M/Y Hermitage, bosun on the 40m charter yacht Sarita Si and the 60m Perini Navi sailing yacht Zenji, and shipyard bosun in Malta, leading a complete in-house repaint.</p>
+        <p>As Chief Officer of the 47m M/Y Sea Falcon 2 he was responsible for ten crew, safety, navigation and passage planning — and stepped in as relief captain for 45 days. Delivery crossings followed, including a Panama Canal transit, then Chief Officer roles on M/Y Lady L and M/Y JEMS.</p>
+        <p>Along the way he watched talented newcomers stall for lack of straight answers. Green Yacht Crew Solutions is the honest, structured guidance he wishes he’d had on day one — backed by the digital tools he now builds for crew.</p>
+      </div>
+      <aside className="gy-card">
+        <h3>Chad at a glance</h3>
+        <ul className="gy-ticks"><li>Deckhand to Chief Officer on superyachts</li><li>Yachtmaster Offshore</li><li>45 days as relief captain on a 47m motor yacht</li><li>Ocean deliveries, including a Panama Canal transit</li><li>Founder of Superyacht CRM, building tech for crew and yacht operations</li></ul>
+        <button className="gy-primary" onClick={() => book()}>Book a call with Chad</button>
+      </aside>
+    </section>
+
     <section className="gy-section">
       <p className="gy-eyebrow">WHAT TO EXPECT</p>
       <h2>One call. A clear next step.</h2>
       <div className="gy-grid">{[['01', 'Pick a time', 'Choose a slot in the booking calendar below.'], ['02', 'Share your situation', 'Tell us your goals, experience, budget and timing.'], ['03', 'Get honest guidance', 'What’s realistic, what to do first and what to skip.'], ['04', 'Decide your next step', 'If coaching is a fit, we’ll explain the options. No pressure to commit on the call.']].map(([n, t, d]) => <article className="gy-card" key={n}><span className="gy-eyebrow">{n}</span><h3>{t}</h3><p>{d}</p></article>)}</div>
+    </section>
+
+    <section className="gy-section" id="reviews" aria-labelledby="reviews-title">
+      <p className="gy-eyebrow">WHAT CREW SAY</p>
+      <h2 id="reviews-title">13 reviews from crew Chad has worked with.</h2>
+      <div className="gy-reviews">{reviews.map(([name, role, text]) => <figure className="gy-review" key={name}><blockquote>{text}</blockquote><figcaption>{name}<span>{role}</span></figcaption></figure>)}</div>
+      <p className="gy-small">Reviews shared by clients on chaddewet.com and shown as written. Individual experiences vary; coaching does not guarantee employment.</p>
+      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book your discovery call</button></div>
     </section>
 
     <section className="gy-section">
@@ -92,6 +134,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
     <section className="gy-section gy-faq">
       <h2>Questions before you book</h2>
       <details><summary>Who are discovery calls for?</summary><p>School leavers, career changers, motivated beginners without a plan and junior crew deciding on their next role. If you’re considering a yacht career, you’re in the right place.</p></details>
+      <details><summary>Who will I speak to?</summary><p>Discovery calls are with Chad de Wet, founder of Green Yacht Crew Solutions and a former superyacht Chief Officer.</p></details>
       <details><summary>Does booking a call or coaching guarantee a job?</summary><p>No. Coaching helps you prepare and make better decisions. Hiring decisions are made by captains, management companies and recruiters, and no qualification, visa or job offer is implied.</p></details>
       <details><summary>Do I need yachting experience?</summary><p>No. Beginners, career changers and experienced crew can all book. Your answers help establish an appropriate next step.</p></details>
       <details><summary>What happens after the call?</summary><p>You leave with a clear next step. If coaching is a good fit, we explain how it works and what’s involved; any programme, delivery arrangements or costs are agreed separately.</p></details>

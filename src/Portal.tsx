@@ -48,7 +48,6 @@ export default function Portal() {
   const currentUser = useRef<string|undefined>(undefined);
   currentUser.current = session?.user.id;
   useEffect(() => {
-    document.title = 'Yacht Crew Career Coaching | Book a Discovery Call | Green Yacht Crew Solutions';
     if (!db) {setAuthReady(true);return;}
     let alive = true, events = 0;
     const {data:{subscription}} = db.auth.onAuthStateChange((event,next) => {

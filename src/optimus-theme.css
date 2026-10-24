@@ -1,0 +1,96 @@
+/* Opt-in visual interpretation; no template assets or claims imported. */
+body.gy-optimus{background:#fafbf8;color:#142822;--eye-ink:#142822;--eye-muted:#52645c;--eye-line:#dce5dc;--eye-green:#176345;--eye-soft:#eef4ea}
+.gy-optimus .gy-theme-preview{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;padding:10px 20px;background:#142822;color:#f5f8f1;font:12px 'Plus Jakarta Sans',system-ui,sans-serif}
+.gy-optimus .gy-theme-preview a{color:#c5f1aa;text-decoration:underline;text-underline-offset:3px}
+.gy-optimus #root>nav[aria-label="Career tools"]{background:#eef4ea!important;color:#355347!important;justify-content:center;border-bottom:1px solid #dce5dc;font:12px 'Plus Jakarta Sans',system-ui,sans-serif;gap:24px!important}
+.gy-optimus .gy-portal{background:#fafbf8;color:var(--eye-ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.75}
+.gy-optimus .gy-portal :is(h1,h2,h3,h4){color:var(--eye-ink);text-wrap:balance}
+.gy-optimus .gy-portal h1{font-family:'Space Grotesk','Plus Jakarta Sans',sans-serif;font-size:clamp(40px,5.7vw,80px);font-weight:600;letter-spacing:-.055em;line-height:1.06}
+.gy-optimus .gy-portal h1 em{color:var(--eye-green)}
+.gy-optimus .gy-portal h2{font-family:'Space Grotesk','Plus Jakarta Sans',sans-serif;font-size:clamp(30px,3.5vw,48px);font-weight:500;letter-spacing:-.045em;line-height:1.15;margin:14px 0 28px}
+.gy-optimus .gy-portal h3{font-size:20px;line-height:1.4;letter-spacing:-.025em}
+.gy-optimus .gy-portal p{color:var(--eye-muted)}
+.gy-optimus .gy-portal .gy-small{color:#52645c!important;font-size:12px!important}
+.gy-optimus .gy-portal .gy-eyebrow{color:#286347!important;font-size:10px;letter-spacing:.17em;line-height:1.8}
+.gy-optimus .gy-header{max-width:1240px;padding:26px 4%;border-color:var(--eye-line)}
+.gy-optimus .gy-header .gy-brand .gy-brand-text{color:#174833;font-size:26px;letter-spacing:.03em}
+.gy-optimus .gy-header .gy-brand .gy-brand-text span{color:#52645c;font-size:8px;letter-spacing:.12em;margin-top:6px}
+.gy-optimus .gy-header nav{font-size:13px;gap:22px}
+.gy-optimus .gy-main{max-width:1240px;padding:0 4% 70px}
+.gy-optimus .gy-portal :is(.gy-primary,.gy-outline){border-radius:8px;padding:13px 22px;font-size:13px;min-height:46px;transition:background .18s,box-shadow .18s}
+.gy-optimus .gy-portal .gy-primary{background:#176345;color:#fff!important;border-color:#176345;box-shadow:0 3px 0 #104b34}
+.gy-optimus .gy-portal .gy-primary:hover{background:#104c35;box-shadow:0 4px 14px #17634525}
+.gy-optimus .gy-portal .gy-outline{background:#fff;color:#243e31;border-color:#ced9cd}
+.gy-optimus .gy-portal .gy-outline:hover{background:#edf4e8}
+.gy-optimus .gy-portal .gy-link{color:#176345;text-underline-offset:4px}
+.gy-optimus .gy-portal :is(button,a,input,select,textarea,summary):focus-visible{outline:3px solid #26855a;outline-offset:4px}
+.gy-optimus .gy-hero{position:relative;isolation:isolate;display:flex;flex-direction:column;gap:48px;text-align:center;padding:85px 0 75px;background-image:linear-gradient(#17634506 1px,transparent 1px),linear-gradient(90deg,#17634506 1px,transparent 1px);background-size:56px 56px}
+.gy-optimus .gy-hero:before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 25% 25%,#d9edcba8,transparent 45%),radial-gradient(ellipse at 80% 65%,#d8e9dfa8,transparent 45%);animation:gy-eye-glow 12s ease-in-out infinite alternate}
+@keyframes gy-eye-glow{from{opacity:.45}to{opacity:.95}}
+.gy-optimus .gy-hero>div{max-width:970px;margin:auto;padding:0 16px}
+.gy-optimus .gy-hero .gy-eyebrow{max-width:610px;margin:0 auto 24px;padding:8px 18px;border:1px solid #d5e3ce;border-radius:100px;background:#f1f7ec}
+.gy-optimus .gy-hero .gy-lead{max-width:690px;margin:26px auto;font-size:17px}
+.gy-optimus .gy-hero .gy-actions{justify-content:center;gap:14px;margin:30px 0 22px}
+.gy-optimus .gy-video{width:min(100%,800px);background:#fff;border:1px solid #d5dfd3;border-radius:16px;padding:12px;box-shadow:0 24px 65px #243f3112;text-align:left}
+.gy-optimus .gy-video-controls{color:#28513d;padding:14px 4px 0}
+.gy-optimus .gy-video-fallback{background:linear-gradient(145deg,#123d4a,#082129,#275753);color:#c5f1aa}
+.gy-optimus .gy-video-fallback p{color:#eef7f1}
+.gy-optimus .gy-section{padding:75px 0;border-color:var(--eye-line);scroll-margin-top:24px}
+.gy-optimus .gy-section[aria-labelledby="problem-title"]{display:grid;grid-template-columns:1fr 1.2fr;gap:0 65px}
+.gy-optimus .gy-section[aria-labelledby="problem-title"]>.gy-eyebrow{grid-column:1/-1}
+.gy-optimus .gy-section[aria-labelledby="problem-title"]>.gy-lead{font-size:16px;margin-top:14px}
+.gy-optimus .gy-grid{gap:16px;margin:32px 0}
+.gy-optimus .gy-card{background:#fff;border:1px solid var(--eye-line);border-radius:12px;padding:30px;box-shadow:none}
+.gy-optimus .gy-card p{font-size:14px;line-height:1.85}
+.gy-optimus .gy-section[aria-labelledby="method-title"] .gy-card{background:linear-gradient(150deg,#f0f5e9,#fff);min-height:235px}
+.gy-optimus .gy-section[aria-labelledby="method-title"] .gy-card>.gy-eyebrow{font-family:'Space Grotesk',sans-serif;font-size:28px;letter-spacing:-.04em;margin:0 0 22px}
+.gy-optimus .gy-tabs{gap:8px;margin:30px 0}
+.gy-optimus .gy-tabs button{color:#42614f;background:#fff;border:1px solid #d8e2d5;border-radius:8px;padding:11px 18px;font-size:13px}
+.gy-optimus .gy-tabs button[aria-selected=true]{background:#142822;border-color:#142822;color:#e0f4d1}
+.gy-optimus .gy-tabs button:hover{background:#e8f0e1;color:#174833}
+.gy-optimus .gy-pathway{gap:40px}
+.gy-optimus .gy-stages li{background:#fff;border-color:#dce5dc;border-radius:10px;padding:18px}
+.gy-optimus .gy-stages li.gy-call{background:#edf5e6;border-color:#8ab67a}
+.gy-optimus .gy-stage-n{background:#eaf2e4;color:#285c39;border-radius:8px;font-family:'Space Grotesk',sans-serif}
+.gy-optimus .gy-call .gy-stage-n{background:#176345;color:#fff}
+.gy-optimus .gy-stages h4{font-size:15px}
+.gy-optimus .gy-ticks li{color:#52645c}
+.gy-optimus .gy-ticks li:before{color:#176345}
+.gy-optimus .gy-ticks strong{color:#142822}
+.gy-optimus .gy-about{gap:55px}
+.gy-optimus .gy-about-lead{color:#254c36!important;font-size:20px;line-height:1.6}
+.gy-optimus .gy-about>.gy-card{background:#edf4e7;border-color:#d1e0c7}
+.gy-optimus .gy-reviews figure.gy-review{background:#fff;border-color:#dce5dc;border-radius:12px;padding:26px;box-shadow:none}
+.gy-optimus .gy-reviews blockquote{color:#52645c}
+.gy-optimus .gy-reviews blockquote:before{color:#176345}
+.gy-optimus .gy-reviews figcaption{color:#142822;border-top:1px solid #e6ece3;padding-top:18px}
+.gy-optimus .gy-reviews figcaption span{color:#526f5b}
+.gy-optimus #my-eye>.gy-lead{max-width:840px}
+.gy-optimus #my-eye .gy-grid .gy-card{background:linear-gradient(150deg,#eef4e8,#fff)}
+.gy-optimus .gy-myeye-panel{background:linear-gradient(145deg,#e5efdb,#f4f7ef,#e3eee4);border-color:#cfdcc9;box-shadow:none;padding:36px;border-radius:16px}
+.gy-optimus .gy-myeye-panel .gy-stages{grid-template-columns:1fr 1fr;gap:14px}
+.gy-optimus .gy-myeye-panel .gy-stages li{background:#ffffffd9;border-color:#d5e1ce}
+.gy-optimus .gy-badge{background:#e3eed7;color:#34502b;border:1px solid #c8d9bb;font-size:9px}
+.gy-optimus .gy-book{gap:50px;grid-template-columns:.8fr 1.2fr}
+.gy-optimus .gy-book-frame{background:linear-gradient(145deg,rgb(18,61,74),rgb(8,33,41),rgb(39,87,83));box-shadow:0 22px 55px #153b2815;border-color:#35574c}
+.gy-optimus .gy-faq{max-width:860px;margin:auto}
+.gy-optimus .gy-faq details{border-color:#dce5dc;padding:22px 0}
+.gy-optimus .gy-faq summary{color:#203e2f;line-height:1.5}
+.gy-optimus .gy-faq details p{max-width:730px;font-size:15px}
+.gy-optimus .gy-band{background:radial-gradient(ellipse at top,#e0edcf,transparent 70%),#edf3e6;border-color:#d2dfc9;border-radius:16px;padding:65px 6%;margin-top:40px}
+.gy-optimus .gy-footer{background:#f0f4eb;border-color:#d8e2d0;color:#35503f;align-items:center;padding:30px 4%}
+.gy-optimus .gy-footer p{color:#52645c}
+.gy-optimus .gy-portal label{color:#2f4e3b}
+.gy-optimus .gy-portal input:not([type=checkbox]),.gy-optimus .gy-portal select,.gy-optimus .gy-portal textarea{background:#fff;color:#142822;border-color:#bacbb7;border-radius:8px}
+.gy-optimus .gy-portal input[type=checkbox]{accent-color:#176345}
+.gy-optimus .gy-disclosure{background:#eef4e8}
+.gy-optimus .gy-steps li{border-color:#cedbc7;color:#48623f}
+.gy-optimus .gy-steps .active{background:#176345;color:#fff}
+.gy-optimus dl.gy-review{background:#fff;border-color:#dce5dc}
+.gy-optimus dl.gy-review>div{border-color:#dce5dc}
+.gy-optimus dl.gy-review dt{color:#176345}
+.gy-optimus .gy-portal .gy-error{background:#fff1f0;border-color:#d5a09a;color:#8a2920!important}
+.gy-optimus .gy-portal .gy-notice{background:#edf5e7;border-color:#a4c598;color:#275433!important}
+@media(max-width:900px){.gy-optimus .gy-header{gap:20px;flex-wrap:wrap}.gy-optimus .gy-hero{padding:60px 0;gap:32px}.gy-optimus .gy-section{padding:50px 0}.gy-optimus .gy-section[aria-labelledby="problem-title"],.gy-optimus .gy-pathway,.gy-optimus .gy-about,.gy-optimus .gy-book{grid-template-columns:1fr;gap:24px}.gy-optimus .gy-portal .gy-sticky{box-shadow:0 6px 25px #14282230;bottom:calc(14px + env(safe-area-inset-bottom))}.gy-optimus .gy-portal{padding-bottom:calc(85px + env(safe-area-inset-bottom))}}
+@media(max-width:600px){.gy-optimus .gy-myeye-panel .gy-stages{grid-template-columns:1fr}.gy-optimus .gy-main{padding-left:5%;padding-right:5%}.gy-optimus .gy-card,.gy-optimus .gy-myeye-panel{padding:22px}.gy-optimus .gy-hero>div{padding:0}.gy-optimus .gy-hero .gy-eyebrow{font-size:9px;border-radius:12px}.gy-optimus .gy-hero .gy-actions>*{width:100%}.gy-optimus .gy-tabs button{flex:1 1 40%}.gy-optimus .gy-reviews{columns:1}.gy-optimus .gy-header .gy-brand .gy-brand-text{font-size:23px}.gy-optimus .gy-hero:before{animation:none;opacity:.7}.gy-optimus .gy-band{padding:40px 22px}.gy-optimus .gy-badge{margin:8px 0;display:table}}
+@media(prefers-reduced-motion:reduce){.gy-optimus .gy-hero:before{animation:none}.gy-optimus .gy-portal *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

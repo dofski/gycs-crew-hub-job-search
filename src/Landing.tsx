@@ -21,6 +21,32 @@ const method: [string, string][] = [
   ['Review your next move.', 'Revisit the plan as your circumstances change. Use actual feedback and progress to decide what needs adjusting.']
 ];
 
+const myEyeFeatures: [string, string][] = [
+  ['See where the yachts are.', 'The live ship layer shows vessel activity around the world’s yachting hubs. Check which marinas are busy before you leave, and spend your morning where the boats actually are.'],
+  ['Research a yacht before you walk up to it.', 'Vessel cards show you a yacht’s details before you approach. Know her name and size, and make your introduction and follow-up specific instead of generic.'],
+  ['Find every useful stop in a new port.', 'Search the map for crew agencies, shipyards, chandleries and crew houses. Arrive in Antibes, Palma or Fort Lauderdale with a full picture of where crew work, meet and hire.'],
+  ['Plan a smarter dockwalking route.', 'Map the marinas in a sensible order before you set off. Less backtracking means more yachts in the right time windows.'],
+  ['Remember every yacht you visit.', 'Drop notes on the map as you go: who you spoke to, where you left a CV, when to follow up. Share your map with your coach so your next session starts from real progress.'],
+  ['Plan hands-free with voice.', 'Ask the built-in voice assistant questions while you walk between marinas, with live traffic and weather on the same map.']
+];
+
+const myEyeRoutine: [string, string][] = [
+  ['Pick your season and port.', 'Target the Med from April to June and the Caribbean from November to January. Off-season, focus on refit yards in hubs like Antibes, Palma and Fort Lauderdale.'],
+  ['Plan the night before.', 'Check which marinas are busy, map your route and add the crew agencies you’ll visit around midday.'],
+  ['Hit the dock at the right time.', 'Aim for about 08:15 to 08:30, after the deck crew’s morning meeting. Avoid break times.'],
+  ['Approach the right boats.', 'Look for yachts where crew are visibly working. Ask for daywork, not a full-time role. Never board uninvited.'],
+  ['Go again in the afternoon.', 'Between 15:00 and 17:00, crew often know tomorrow’s workload and may need an extra pair of hands.'],
+  ['Follow up the same evening.', 'Send your CV to every good contact and log it on your map. Your coach can see what’s working and help you adjust.']
+];
+
+const myEyeSoon: [string, string][] = [
+  ['Dockwalk planner:', 'choose a port and get its marinas, yards, crew agencies and crew houses pre-loaded, with a suggested route and the best times to approach.'],
+  ['Yacht shortlist and contact log:', 'save yachts straight from the map and track each one from visited to CV left to follow-up due, synced to your Crew Hub.'],
+  ['Port activity summary:', 'see which marinas are busiest today before you leave the crew house.'],
+  ['Daywork log to CV:', 'every daywork shift becomes a ready-made line on your yacht CV.'],
+  ['Coach view:', 'share your port and vessel with your coach only, so they can support you wherever you are.']
+];
+
 const reviews: [string, string, string][] = [
   ["Ellen Kay-Shuttleworth", "Junior Stewardess", "Chad has designed an innovative and modern approach to finding a job onboard. I have full faith in him and his programme, anyone who is having doubts about how to find a job abroad - give Chad a call. He is passionate about helping you and I promise you won't regret it. Much love!"],
   ["Samuel Martins", "Junior Deckhand", "EDIT: I've landed my first job literally less than 24 hours after my meeting with Chad! His interview tips definitely helped me secure the position. Once again. highly recommend his services! Chad is an industry veteran. He is very knowledgable, he cares about his clients, and he genuinely wants to help new crew. Coming into the industry can be very overwhelming, and Chad is an expert to help navigate what exactly to avoid and what you want to get out of working in this industry"],
@@ -65,7 +91,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
       <p className="gy-lead">Chad's Coaching helps you make sense of your options, identify preparation priorities and present your experience honestly—so your next move is a considered decision, not another guess.</p>
       <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call ↓</button><button className="gy-outline" disabled={!canStart} onClick={onStart}>{session ? 'Continue your journey' : 'Start your application'}</button>{!session && <button className="gy-link" onClick={onSignIn}>Member sign in</button>}</div>
       <p className="gy-small">Tell us where you’re starting. Let’s explore what support makes sense.</p>
-      <p className="gy-small">Coached by Chad de Wet. <button className="gy-link" onClick={() => jump('reviews')}>Read 13 crew reviews</button></p>
+      <p className="gy-small">Coached by Chad de Wet. <button className="gy-link" onClick={() => jump('reviews')}>Read 13 crew reviews</button> · <button className="gy-link" onClick={() => jump('my-eye')}>Discover M/Y Eye</button></p>
     </div>{video}</section>
 
     <section className="gy-section" aria-labelledby="problem-title">
@@ -127,6 +153,27 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
       <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call</button></div>
     </section>
 
+    <section className="gy-section" id="my-eye" aria-labelledby="my-eye-title">
+      <p className="gy-eyebrow">M/Y EYE · FOR GYCS CREW</p>
+      <h2 id="my-eye-title">M/Y Eye: Find Yacht Jobs With a Plan, Not Guesswork</h2>
+      <p className="gy-lead">Most new crew look for their first yacht job the hard way: walking random docks, missing the busy marinas and forgetting who they spoke to. M/Y Eye turns your yacht job search into a plan. It’s a live, interactive map of the world’s yachting ports. Use it to see where yachts are, plan your dockwalking route, research boats before you approach them and keep track of every contact. That way every day on the dock counts.</p>
+      <p>M/Y Eye works alongside your GYCS coaching. Your coach helps you decide what to aim for. M/Y Eye helps you get out there and do it.</p>
+      <h3>What M/Y Eye helps you do</h3>
+      <div className="gy-grid gy-grid-3">{myEyeFeatures.map(([t, d]) => <article className="gy-card" key={t}><h3>{t}</h3><p>{d}</p></article>)}</div>
+      <div className="gy-myeye-panel">
+        <p className="gy-eyebrow">A DAILY DOCKWALKING ROUTINE</p>
+        <h3>How GYCS crew use M/Y Eye</h3>
+        <ol className="gy-stages">{myEyeRoutine.map(([t, d], n) => <li key={t}><span className="gy-stage-n">{String(n + 1).padStart(2, '0')}</span><div><h4>{t}</h4><p>{d}</p></div></li>)}</ol>
+        <p>Want help using M/Y Eye to plan your first season?</p>
+        <button className="gy-primary" onClick={() => book()}>Book My Discovery Call</button>
+      </div>
+      <h3>Coming soon to M/Y Eye<span className="gy-badge">IN DEVELOPMENT</span></h3>
+      <ul className="gy-ticks">{myEyeSoon.map(([t, d]) => <li key={t}><strong>{t}</strong> {d}</li>)}</ul>
+      <h3>Walk the docks with a plan.</h3>
+      <p>Combine GYCS coaching with M/Y Eye and make every day in port count: the right marinas, the right time and a follow-up for every contact.</p>
+      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call</button></div>
+    </section>
+
     <section className="gy-section">
       <p className="gy-eyebrow">FIND YOUR DEPARTMENT</p>
       <h2>Deck, interior, engineering or galley?</h2>
@@ -155,6 +202,11 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
       <details><summary>What happens after the call?</summary><p>You leave with a clear next step. If coaching is a good fit, we explain how it works and what’s involved; any programme, delivery arrangements or costs are agreed separately.</p></details>
       <details><summary>Can I also apply through the Crew Hub?</summary><p>Yes. Create an account and complete your intake at any time. Booking a call is separate from programme admission.</p></details>
       <details><summary>Should I share my passport or medical records?</summary><p>No. Please don’t include passport numbers, medical details or financial account information when booking or in your intake.</p></details>
+      <details><summary>Does M/Y Eye find me a yacht job?</summary><p>No tool can promise you a job. M/Y Eye helps you look for one in a smarter, more organised way. Hiring decisions stay with captains, heads of department and crew agencies.</p></details>
+      <details><summary>Can M/Y Eye help with entry-level yacht jobs?</summary><p>Yes. It’s built for greenies and junior crew who are dockwalking and looking for daywork, as well as crew planning their next contract.</p></details>
+      <details><summary>Is every yacht shown on the M/Y Eye map?</summary><p>No. Ship-tracking data isn’t complete, and some yachts may be missing or out of date. Use M/Y Eye to plan, then confirm in person on the dock.</p></details>
+      <details><summary>Can I dockwalk at any marina?</summary><p>Not always. Some marinas and shipyards have strict security, and some ports don’t allow dockwalking. Check local rules before you go.</p></details>
+      <details><summary>Who can see my location on M/Y Eye?</summary><p>When coach view launches, your port and vessel will be visible only to you and your assigned coach.</p></details>
     </section>
 
     <section className="gy-band">

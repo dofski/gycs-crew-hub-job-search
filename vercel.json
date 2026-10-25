@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/coach/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}

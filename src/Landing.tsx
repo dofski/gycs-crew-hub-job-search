@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import './landing.css';
+import Reviews, {reviewCount} from './Reviews';
 
 type Stage = [string, string];
 type Icp = {id: string; tab: string; eyebrow: string; hook: string; pain: string; stages: Stage[]; covers: string[]; cta: string};
@@ -47,22 +48,6 @@ const myEyeSoon: [string, string][] = [
   ['Coach view:', 'share your port and vessel with your coach only, so they can support you wherever you are.']
 ];
 
-const reviews: [string, string, string][] = [
-  ["Ellen Kay-Shuttleworth", "Junior Stewardess", "Chad has designed an innovative and modern approach to finding a job onboard. I have full faith in him and his programme, anyone who is having doubts about how to find a job abroad - give Chad a call. He is passionate about helping you and I promise you won't regret it. Much love!"],
-  ["Samuel Martins", "Junior Deckhand", "EDIT: I've landed my first job literally less than 24 hours after my meeting with Chad! His interview tips definitely helped me secure the position. Once again. highly recommend his services! Chad is an industry veteran. He is very knowledgable, he cares about his clients, and he genuinely wants to help new crew. Coming into the industry can be very overwhelming, and Chad is an expert to help navigate what exactly to avoid and what you want to get out of working in this industry"],
-  ["Mj Strauss", "Junior Deckhand", "I joined Chad’s program as a “greenie” about three weeks ago. Up until now I had an amazing experience and already learned a lot. Couldn’t ask for a better life coach! I would highly recommend this program for anyone that wants to enter the industry."],
-  ["Dani Lynn", "Lifestyle Marketer", "This guy right here!!!! BOMB. If you need any help or guidance (and I mean straight up, no beating around the bush guidance) you are at the right place! Listen, ask questions, and follow. He will help get you on the right path."],
-  ["Gareth Mark Toerien", "Junior Deckhand", "Chad is an excellent learning facilitator, his classes are well structured and extremely informative. Anyone looking at getting into yachting should defiantly give him a shout, it is totally worth tour while, he even gives avenues and insights for you to pursue in future ventures Too bloke. Highly recommended"],
-  ["Liam OSullivan", "Junior Deckhand", "Chad is a awesome guy and is really helpful with everything he does . His courses are very well run and he puts you in the best position you can be in to find a job . He goes completely out his way to benefit you . Thanks Chad"],
-  ["Liam Davern Caffery", "Junior Deckhand", "I highly recommend Chad's course as it takes a fresh and modern take on finding a job and presenting yourself in the digital space. His experience and skills are invaluable!"],
-  ["Cullen Wright", "Junior Deckhand", "Highly recommendable. Everything you need to know about getting a job and keeping it is covered in Chad’s courses which is invaluable information if you have limited experience. Definitely worth it and going to recommend to my mates that want to start out in the industry!"],
-  ["Bizel ßv", "Commercial Officer", "This is a man with insight and innovation in a industry that is lacking this sort of initiative, I have been fortunate to meet and connect with Chad and what he is all about. He has great ideas moving forward and all make sense the way he connects each one. I told him no agency yet has got me a job and in his own words said 'Its because they lack vision!' and they do…"],
-  ["Dayn Bruwer", "Experienced Bosun - In Couple", "Working with Chad is a great experience!!.He delivers the exact service that he advertises.I definitely prefer working with him if you are looking to land a job onboard."],
-  ["Jadon Ferrier", "Junior Deckhand", "What a great experience. I have so much respect for Chad! He is an amazing guy, helpful and straightforward, nothing gets sugarcoated. You can see Chad’s passion in his work, his intensions is truly to give the best advice he possibly can. Highly recommend Chad’s service every second worth it Just want to give a huge thanks to you Chad for all your help!"],
-  ["Afrika Masuku", "Chief Officer", "It is my pleasure to offer my unreserved recommendation for Chad for someone who is looking to start in the yachting industry. He has always demonstrated responsibility, and he has an exceptional expertise in leadership, coaching and motivation. If l may expand further, Chad has extensive strategies along with solid social media skills. I would welcome the opportunity to work with Chad again. #Loyal #insightful"],
-  ["Noemi Santiago", "Junior Stewardess", "This is so informative. I thought I knew a little of what exactly you need to get into the yachting industry, but wow this really opened my eyes. I am so happy I read this. From start to finish there is so much information and step by step, of what is needed, and what you need to do. I wish I would have had this information before I started my courses, because it would have made my life so much easier. I am happy I have this now. Thank you for this information…"]
-];
-
 function Booking() {
   useEffect(() => {
     const id = 'gycs-ghl-form-embed';
@@ -91,7 +76,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
       <p className="gy-lead">Chad's Coaching helps you make sense of your options, identify preparation priorities and present your experience honestly—so your next move is a considered decision, not another guess.</p>
       <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call ↓</button><button className="gy-outline" disabled={!canStart} onClick={onStart}>{session ? 'Continue your journey' : 'Start your application'}</button>{!session && <button className="gy-link" onClick={onSignIn}>Member sign in</button>}</div>
       <p className="gy-small">Tell us where you’re starting. Let’s explore what support makes sense.</p>
-      <p className="gy-small">Coached by Chad de Wet. <button className="gy-link" onClick={() => jump('reviews')}>Read 13 crew reviews</button> · <button className="gy-link" onClick={() => jump('my-eye')}>Discover M/Y Eye</button></p>
+      <p className="gy-small">Coached by Chad de Wet. <button className="gy-link" onClick={() => jump('reviews')}>Read {reviewCount} client & crew reviews</button> · <button className="gy-link" onClick={() => jump('my-eye')}>Discover M/Y Eye</button></p>
     </div>{video}</section>
 
     <section className="gy-section" aria-labelledby="problem-title">
@@ -145,13 +130,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
       </aside>
     </section>
 
-    <section className="gy-section" id="reviews" aria-labelledby="reviews-title">
-      <p className="gy-eyebrow">WHAT CREW SAY</p>
-      <h2 id="reviews-title">13 reviews from crew Chad has worked with.</h2>
-      <div className="gy-reviews">{reviews.map(([name, role, text]) => <figure className="gy-review" key={name}><blockquote>{text}</blockquote><figcaption>{name}<span>{role}</span></figcaption></figure>)}</div>
-      <p className="gy-small">Reviews shared by clients on chaddewet.com and shown as written. Individual experiences vary; coaching does not guarantee employment.</p>
-      <div className="gy-actions"><button className="gy-primary" onClick={() => book()}>Book My Discovery Call</button></div>
-    </section>
+    <Reviews onBook={() => book()}/>
 
     <section className="gy-section" id="my-eye" aria-labelledby="my-eye-title">
       <p className="gy-eyebrow">M/Y EYE · FOR GYCS CREW</p>

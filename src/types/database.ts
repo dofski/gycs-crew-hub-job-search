@@ -87,6 +87,13 @@ export interface CVData {
     fullName: string;
     nationality: string;
     location: string;
+    dateOfBirth?: string;
+    email?: string;
+    phone?: string;
+    passportExpiry?: string;
+    seamanBook?: string;
+    medicalFitness?: string;
+    swimmingAbility?: string;
     visas: string[];
     languages: string[];
     smoker: boolean;
@@ -94,12 +101,29 @@ export interface CVData {
   };
   objective: {
     text: string;
+    targetRole?: string;
+    targetDepartment?: string;
     label: VerificationStatus;
   };
   experience: CVExperience[];
   qualifications: CVEducation[];
   skills: Array<{ name: string; label: VerificationStatus }>;
-  references: Array<{ name: string; role: string; contactShared: boolean; label: VerificationStatus }>;
+  references: Array<{
+    name: string;
+    role: string;
+    contact?: string;
+    contactShared: boolean;
+    label: VerificationStatus;
+  }>;
+  additional?: {
+    targetRole?: string;
+    targetDepartment?: string;
+    availabilityDate?: string;
+    contractPreference?: string;
+    preferredPorts?: string;
+    runwayMonths?: number;
+    hobbiesAndInterests?: string;
+  };
   coachComments?: string;
   isCurrent: boolean;
   updatedAt: string;

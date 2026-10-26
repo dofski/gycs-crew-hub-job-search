@@ -34,10 +34,18 @@ export const LearningHub: React.FC<LearningHubProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!submissionText.trim()) return;
+    if (!submissionText.trim() || !currentLesson) return;
     onSubmitAssignment(currentLesson.id, submissionText);
     setSubmissionText('');
   };
+
+  if (!currentLesson) {
+    return (
+      <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl text-xs text-slate-400">
+        No published lessons are currently available.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -52,8 +52,11 @@ export interface DocumentItem {
   title: string;
   description?: string;
   verificationStatus: VerificationStatus;
+  filePath?: string;
   fileName?: string;
   fileSizeBytes?: number;
+  mimeType?: string;
+  documentHash?: string;
   issuedDate?: string;
   expiryDate?: string;
   issuingAuthority?: string;

@@ -568,16 +568,7 @@ export default function Portal() {
             <p className="gy-eyebrow">LIVE INTERACTIVE COACHING</p>
             <h1>Live Coaching &amp; Strategy Room</h1>
             <p className="gy-lead">Watch live coaching broadcasts and strategy breakdowns with Chad de Wet.</p>
-            {isLive ? (
-              <GumletLiveEmbed />
-            ) : (
-              <div className="gy-card">
-                <p>
-                  No live broadcast is actively streaming right now. The live video player will appear here
-                  automatically as soon as Chad goes live.
-                </p>
-              </div>
-            )}
+            <GumletLiveEmbed />
           </section>
         )}
         {['signin', 'signup', 'reset', 'password'].includes(view) && (

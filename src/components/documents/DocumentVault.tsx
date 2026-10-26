@@ -20,13 +20,15 @@ import type { VerificationStatus, DocumentCategory } from '../../lib/constants.t
 
 interface DocumentVaultProps {
   documents: DocumentItem[];
-  onUploadDocument: (doc: Partial<DocumentItem>) => void;
+  onUploadDocument: (doc: Partial<DocumentItem>, file?: File | null) => void;
+  onOpenDocument?: (doc: DocumentItem) => void;
   onUpdateStatus?: (docId: string, status: VerificationStatus) => void;
 }
 
 export const DocumentVault: React.FC<DocumentVaultProps> = ({
   documents,
   onUploadDocument,
+  onOpenDocument,
 }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -34,6 +36,7 @@ export const DocumentVault: React.FC<DocumentVaultProps> = ({
   const [newAuthority, setNewAuthority] = useState('');
   const [newExpiryDate, setNewExpiryDate] = useState('');
   const [isSensitive, setIsSensitive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const getStatusBadge = (status: VerificationStatus) => {
     switch (status) {
@@ -52,20 +55,25 @@ export const DocumentVault: React.FC<DocumentVaultProps> = ({
     e.preventDefault();
     if (!newTitle) return;
 
-    onUploadDocument({
-      title: newTitle,
-      category: newCategory,
-      issuingAuthority: newAuthority || 'Accredited Maritime Center',
-      expiryDate: newExpiryDate || undefined,
-      verificationStatus: 'uploaded',
-      fileName: `${newTitle.toLowerCase().replace(/\s+/g, '_')}.pdf`,
-      fileSizeBytes: 1540000,
-      isSensitive,
-    });
+    onUploadDocument(
+      {
+        title: newTitle.trim(),
+        category: newCategory,
+        issuingAuthority: newAuthority.trim() || undefined,
+        expiryDate: newExpiryDate || undefined,
+        verificationStatus: selectedFile ? 'uploaded' : 'claimed',
+        fileName: selectedFile ? selectedFile.name : undefined,
+        fileSizeBytes: selectedFile ? selectedFile.size : undefined,
+        mimeType: selectedFile ? selectedFile.type : undefined,
+        isSensitive,
+      },
+      selectedFile
+    );
 
     setNewTitle('');
     setNewAuthority('');
     setNewExpiryDate('');
+    setSelectedFile(null);
     setShowUploadModal(false);
   };
 
@@ -117,6 +125,11 @@ export const DocumentVault: React.FC<DocumentVaultProps> = ({
         </div>
 
         <div className="divide-y divide-slate-800/80">
+          {documents.length === 0 && (
+            <div className="p-6 text-center text-xs text-slate-400">
+              No document records stored yet. Click <strong>Upload New Evidence</strong> above to upload a certificate, medical, or passport record to your private vault.
+            </div>
+          )}
           {documents.map((doc) => (
             <div key={doc.id} className="p-4 hover:bg-slate-800/30 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-start gap-3">
@@ -135,6 +148,12 @@ export const DocumentVault: React.FC<DocumentVaultProps> = ({
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 mt-1">
                     <span className="capitalize">Category: <strong className="text-slate-300">{doc.category}</strong></span>
                     {doc.issuingAuthority && <span>Issuer: <strong className="text-slate-300">{doc.issuingAuthority}</strong></span>}
+                    {doc.fileName && (
+                      <span className="font-mono text-slate-300">
+                        File: {doc.fileName}
+                        {doc.fileSizeBytes ? ` (${Math.round(doc.fileSizeBytes / 1024)} KB)` : ''}
+                      </span>
+                    )}
                     {doc.expiryDate && (
                       <span className="flex items-center gap-1 text-amber-300 font-mono">
                         <Clock className="w-3 h-3" />
@@ -152,6 +171,15 @@ export const DocumentVault: React.FC<DocumentVaultProps> = ({
               </div>
 
               <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                {doc.filePath && onOpenDocument && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenDocument(doc)}
+                    className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-semibold transition"
+                  >
+                    View / Download
+                  </button>
+                )}
                 {getStatusBadge(doc.verificationStatus)}
               </div>
             </div>
@@ -194,6 +222,8 @@ export const DocumentVault: React.FC<DocumentVaultProps> = ({
                     <option value="identity">Identity / Passport</option>
                     <option value="qualification">Qualification</option>
                     <option value="reference">Reference</option>
+                    <option value="travel">Travel / Visa</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
 
@@ -217,6 +247,23 @@ export const DocumentVault: React.FC<DocumentVaultProps> = ({
                   onChange={(e) => setNewAuthority(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Attach Document File (PDF, JPG, PNG, WEBP — max 15 MB)
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf,image/jpeg,image/png,image/webp"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-600 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  {selectedFile
+                    ? `Selected: ${selectedFile.name} (${Math.round(selectedFile.size / 1024)} KB) — will upload to private crew-documents bucket.`
+                    : 'Optional: attach a file to upload to private Storage, or leave empty to log a claimed credential record.'}
+                </p>
               </div>
 
               <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">

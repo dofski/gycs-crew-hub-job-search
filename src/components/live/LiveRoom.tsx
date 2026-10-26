@@ -33,7 +33,7 @@ export const LiveRoom: React.FC<LiveRoomProps> = ({ sessions, onAddQuestion }) =
 
   const handleQuestionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newQuestion.trim()) return;
+    if (!newQuestion.trim() || !currentSession) return;
     onAddQuestion(currentSession.id, newQuestion);
     setNewQuestion('');
   };
@@ -56,19 +56,18 @@ export const LiveRoom: React.FC<LiveRoomProps> = ({ sessions, onAddQuestion }) =
         </div>
 
         <div className="flex items-center gap-2">
-          <span className={`w-2.5 h-2.5 rounded-full ${isLive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
-          <span className={`text-xs font-semibold ${isLive ? 'text-emerald-300' : 'text-slate-400'}`}>
-            {isLive ? 'Live Stream Active' : 'Stream Offline'}
+          <span className={`w-2.5 h-2.5 rounded-full ${isLive ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-500/60'}`} />
+          <span className={`text-xs font-semibold ${isLive ? 'text-emerald-300' : 'text-slate-300'}`}>
+            {isLive ? 'Live Stream Active' : 'Gumlet Stream Player Ready'}
           </span>
         </div>
       </div>
 
-      {isLive && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-          <GumletLiveEmbed />
-        </div>
-      )}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <GumletLiveEmbed />
+      </div>
 
+      {currentSession ? (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Session Schedule & Join Link (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
@@ -133,7 +132,7 @@ export const LiveRoom: React.FC<LiveRoomProps> = ({ sessions, onAddQuestion }) =
                 }`}
               >
                 <Video className="w-4 h-4" />
-                <span>Launch Zoom Meeting (External Provider)</span>
+                <span>Open Stream / Recording in New Tab</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -195,6 +194,11 @@ export const LiveRoom: React.FC<LiveRoomProps> = ({ sessions, onAddQuestion }) =
           </div>
         </div>
       </div>
+      ) : (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-xs text-slate-400">
+          No scheduled session metadata is currently attached. You can watch the live coaching stream above.
+        </div>
+      )}
     </div>
   );
 };

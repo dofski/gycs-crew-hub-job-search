@@ -3,10 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createClient, type Session } from '@supabase/supabase-js';
 import { ApplicationTracker } from './components/applications/ApplicationTracker.tsx';
 import { CVStudio } from './components/cv/CVStudio.tsx';
+import { DocumentVault } from './components/documents/DocumentVault.tsx';
+import { LearningHub } from './components/learn/LearningHub.tsx';
+import { LiveRoom } from './components/live/LiveRoom.tsx';
 import { OpportunityBoard } from './components/opportunities/OpportunityBoard.tsx';
 import { CrewMapLocationSettings } from './components/settings/CrewMapLocationSettings.tsx';
 import { ProfileEditor } from './components/settings/ProfileEditor.tsx';
-import { GumletLiveEmbed, useGumletLiveStatus } from './components/live/GumletLiveStream.tsx';
 import { ThemeSwitcher } from './lib/theme.tsx';
 import {
   COACHING_PROGRAMMES,
@@ -317,7 +319,6 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
         : 'today';
   const [tab, setTab] = useState(initialTab),
     [data, setData] = useState<Record<string, any> | null>(null);
-  const { isLive } = useGumletLiveStatus();
   const [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
@@ -346,8 +347,9 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
       cvs: db!.from('cv_versions').select('*').eq('user_id', userId).order('version', { ascending: false }).limit(1),
       documents: db!
         .from('documents')
-        .select('id,title,category,verification_status,expiry_date,is_sensitive')
-        .eq('user_id', userId),
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false }),
       assessments: db!
         .from('assessments')
         .select('id,status,motivation,department_fit,created_at')
@@ -362,12 +364,14 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
       cohorts: db!.from('cohorts').select('*').eq('is_active', true),
       lessons: db!
         .from('lessons')
-        .select('id,title,content,lesson_type,video_url,sort_order')
+        .select('*')
         .eq('is_published', true)
         .order('sort_order'),
+      assignments: db!.from('assignments').select('*'),
+      submissions: db!.from('assignment_submissions').select('*').eq('user_id', userId),
       progress: db!.from('lesson_progress').select('id,lesson_id,completed').eq('user_id', userId),
-      sessions: db!.from('live_sessions').select('id,title,scheduled_at,duration_mins').order('scheduled_at'),
-      questions: db!.from('session_questions').select('id,session_id,question,answered,answer').eq('user_id', userId),
+      sessions: db!.from('live_sessions').select('*').order('scheduled_at', { ascending: false }),
+      questions: db!.from('session_questions').select('*').order('created_at', { ascending: true }),
       consents: db!
         .from('consent_records')
         .select('id,consent_type,status,created_at')
@@ -856,194 +860,292 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
           />
         )}
         {tab === 'documents' && (
-          <Panel title="Document records">
-            <Empty>
-              File upload and download are not enabled in this patch. No private Storage bucket or signed-download flow
-              has been provisioned. Do not upload sensitive documents through a demo control.
-            </Empty>
-            {!data.documents.length && <Empty>No document records yet.</Empty>}
-            {data.documents.map((d: Row) => (
-              <p key={d.id}>
-                {d.title} · {d.category} · {d.verification_status}
-                {d.expiry_date ? ` · Expires ${d.expiry_date}` : ''}
-              </p>
-            ))}
-          </Panel>
-        )}
-        {tab === 'opportunities' &&
-          (opportunities.length ? (
-            <OpportunityBoard
-              opportunities={opportunities}
-              onSaveToApplications={o => {
-                const exists = applications.some(a => a.opportunityId === o.id);
-                if (exists) {
-                  setTab('applications');
-                  return;
-                }
-                void run(
-                  () =>
-                    checked(
-                      db!
-                        .from('applications')
-                        .insert({
-                          user_id: userId,
-                          opportunity_id: o.id,
-                          external_title: o.title,
-                          external_employer: o.employerName,
-                          external_url: o.externalUrl || null,
-                          status: 'saved',
-                        })
-                        .select('id')
-                        .single()
-                    ),
-                  'Opportunity saved to your applications.'
-                );
-              }}
-            />
-          ) : (
-            <Panel title="Opportunities">
-              <Empty>
-                No active opportunities from verified employers are available. This view does not manufacture job
-                listings or dispatch demo webhooks.
-              </Empty>
-            </Panel>
-          ))}
-        {tab === 'applications' &&
-          (applications.length ? (
-            <ApplicationTracker
-              applications={applications}
-              onUpdateStatus={(id, status) => {
-                void run(() =>
-                  checked(db!.from('applications').update({ status }).eq('id', id).eq('user_id', userId).select('id').single())
-                );
-              }}
-              onAddInterview={(id, date, notes) => {
-                void run(
-                  () =>
-                    checked(
-                      db!
-                        .from('interviews')
-                        .insert({ application_id: id, scheduled_at: new Date(date).toISOString(), format: 'video', notes })
-                        .select('id')
-                        .single()
-                    ),
-                  'Interview saved. You can update the application status separately.'
-                );
-              }}
-            />
-          ) : (
-            <Panel title="Applications">
-              <Empty>No applications saved yet.</Empty>
-            </Panel>
-          ))}
-        {tab === 'learn' && (
-          <Panel title="Learning">
-            {!data.lessons.length && <Empty>No published lessons are available to your current enrolment.</Empty>}
-            {data.lessons.map((l: Row) => {
-              const progress = data.progress.find((v: Row) => v.lesson_id === l.id);
-              return (
-                <article key={l.id} className="border-t border-slate-800 pt-3 space-y-3">
-                  <h3>{l.title}</h3>
-                  {l.video_url && (
-                    <div style={{ position: 'relative', aspectRatio: '16/9' }}>
-                      <iframe
-                        loading="lazy"
-                        title={l.title || 'Gumlet course video player'}
-                        src={l.video_url}
-                        style={{ border: 'none', position: 'absolute', top: 0, left: 0, height: '100%', width: '100%' }}
-                        referrerPolicy="origin"
-                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;clipboard-write;"
-                      />
-                    </div>
-                  )}
-                  <p className="whitespace-pre-wrap text-sm text-slate-300">{l.content}</p>
-                  <label className="flex gap-2">
-                    <input
-                      type="checkbox"
-                      checked={!!progress?.completed}
-                      onChange={e => {
-                        const completed = e.target.checked;
-                        const payload = { completed, completed_at: completed ? new Date().toISOString() : null };
-                        void run(() =>
-                          checked(
-                            progress
-                              ? db!
-                                  .from('lesson_progress')
-                                  .update(payload)
-                                  .eq('id', progress.id)
-                                  .eq('user_id', userId)
-                                  .select('id')
-                                  .single()
-                              : db!
-                                  .from('lesson_progress')
-                                  .insert({ ...payload, user_id: userId, lesson_id: l.id })
-                                  .select('id')
-                                  .single()
-                          )
-                        );
-                      }}
-                    />
-                    Mark complete
-                  </label>
-                </article>
+          <DocumentVault
+            documents={data.documents.map((d: Row) => ({
+              id: d.id,
+              userId: d.user_id || userId,
+              category: d.category,
+              title: d.title,
+              description: d.description || undefined,
+              issuingAuthority: d.issuing_authority || undefined,
+              verificationStatus: d.verification_status,
+              filePath: d.file_path || undefined,
+              fileName: d.file_name || undefined,
+              fileSizeBytes: d.file_size_bytes || undefined,
+              mimeType: d.mime_type || undefined,
+              documentHash: d.document_number_hash || undefined,
+              expiryDate: d.expiry_date || undefined,
+              reviewNotes: d.review_notes || undefined,
+              isSensitive: Boolean(d.is_sensitive),
+            }))}
+            onUploadDocument={(doc, file) => {
+              void run(
+                async () => {
+                  let storagePath: string | null = null;
+                  let fileHash: string | null = null;
+                  if (file) {
+                    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    storagePath = `${userId}/${Date.now()}_${safeName}`;
+                    if (typeof crypto !== 'undefined' && crypto.subtle) {
+                      const buf = await file.arrayBuffer();
+                      const digest = await crypto.subtle.digest('SHA-256', buf);
+                      fileHash = Array.from(new Uint8Array(digest))
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('');
+                    }
+                    const { error: upErr } = await db!.storage.from('crew-documents').upload(storagePath, file, {
+                      upsert: true,
+                      contentType: file.type || 'application/octet-stream',
+                    });
+                    if (upErr) throw new Error(`File upload failed: ${upErr.message}`);
+                  }
+                  await checked(
+                    db!
+                      .from('documents')
+                      .insert({
+                        user_id: userId,
+                        title: doc.title,
+                        category: doc.category || 'training',
+                        issuing_authority: doc.issuingAuthority || null,
+                        expiry_date: doc.expiryDate || null,
+                        verification_status: file ? 'uploaded' : 'claimed',
+                        file_path: storagePath,
+                        file_name: file ? file.name : doc.fileName || null,
+                        file_size_bytes: file ? file.size : doc.fileSizeBytes || null,
+                        mime_type: file ? file.type || null : null,
+                        document_number_hash: fileHash,
+                        is_sensitive: Boolean(doc.isSensitive),
+                      })
+                      .select('id')
+                      .single()
+                  );
+                },
+                file
+                  ? 'Document file uploaded to private Storage and recorded in Supabase.'
+                  : 'Document credential record saved to Supabase.'
               );
-            })}
-            <Empty>Assignment submission is not enabled in this patch.</Empty>
-          </Panel>
+            }}
+            onOpenDocument={doc => {
+              if (!doc.filePath) return;
+              void run(async () => {
+                const { data: signed, error: signErr } = await db!.storage
+                  .from('crew-documents')
+                  .createSignedUrl(doc.filePath!, 300);
+                if (signErr || !signed?.signedUrl) {
+                  throw new Error(signErr?.message || 'Unable to generate signed download link.');
+                }
+                window.open(signed.signedUrl, '_blank', 'noopener,noreferrer');
+              }, 'Opened signed private document link (valid for 5 minutes).');
+            }}
+          />
         )}
-        {tab === 'live' && (
-          <Panel title="Live coaching">
-            <div className="flex items-center gap-2 text-xs">
-              <span
-                className={`inline-block h-2.5 w-2.5 rounded-full ${isLive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}
-              />
-              <span>
-                {isLive
-                  ? 'Live broadcast actively streaming'
-                  : 'Live broadcast standby — video displays automatically when live'}
-              </span>
-            </div>
-            {isLive && <GumletLiveEmbed />}
-            {!data.sessions.length && <Empty>No sessions are available to your current enrolment.</Empty>}
-            {data.sessions.map((s: Row) => (
-              <article key={s.id} className="space-y-3 border-t border-slate-800 pt-3">
-                <h3>{s.title}</h3>
-                <p>
-                  {dateText(s.scheduled_at)} · {s.duration_mins} minutes
-                </p>
-                <form
-                  onSubmit={e => {
-                    e.preventDefault();
-                    const f = new FormData(e.currentTarget);
-                    void run(() =>
-                      checked(
-                        db!
-                          .from('session_questions')
-                          .insert({ user_id: userId, session_id: s.id, question: String(f.get('question')).trim() })
+        {tab === 'opportunities' && (
+          <OpportunityBoard
+            opportunities={opportunities}
+            accessToken={session.access_token}
+            onSaveToApplications={o => {
+              const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(o.id || '');
+              const exists = applications.some(
+                a => (isUuid && a.opportunityId === o.id) || (a.title === o.title && a.employer === o.employerName)
+              );
+              if (exists) {
+                setTab('applications');
+                return;
+              }
+              void run(
+                () =>
+                  checked(
+                    db!
+                      .from('applications')
+                      .insert({
+                        user_id: userId,
+                        opportunity_id: isUuid ? o.id : null,
+                        external_title: o.title,
+                        external_employer: o.employerName,
+                        external_url: o.externalUrl || null,
+                        notes: o.location ? `Location: ${o.location}` : null,
+                        status: 'saved',
+                      })
+                      .select('id')
+                      .single()
+                  ),
+                'Opportunity saved to your applications.'
+              );
+            }}
+          />
+        )}
+        {tab === 'applications' && (
+          <ApplicationTracker
+            applications={applications}
+            onUpdateStatus={(id, status) => {
+              void run(() =>
+                checked(db!.from('applications').update({ status }).eq('id', id).eq('user_id', userId).select('id').single())
+              );
+            }}
+            onAddInterview={(id, date, notes) => {
+              void run(
+                () =>
+                  checked(
+                    db!
+                      .from('interviews')
+                      .insert({ application_id: id, scheduled_at: new Date(date).toISOString(), format: 'video', notes })
+                      .select('id')
+                      .single()
+                  ),
+                'Interview saved. You can update the application status separately.'
+              );
+            }}
+            onAddApplication={app => {
+              void run(
+                () =>
+                  checked(
+                    db!
+                      .from('applications')
+                      .insert({
+                        user_id: userId,
+                        external_title: app.title,
+                        external_employer: app.employer,
+                        external_url: app.externalUrl || null,
+                        notes: app.notes || null,
+                        status: app.status,
+                      })
+                      .select('id')
+                      .single()
+                  ),
+                'Application logged to your pipeline.'
+              );
+            }}
+          />
+        )}
+        {tab === 'learn' && (
+          <LearningHub
+            lessons={data.lessons.map((l: Row, idx: number) => {
+              const prog = data.progress.find((v: Row) => v.lesson_id === l.id);
+              const assign = (data.assignments || []).find((a: Row) => a.lesson_id === l.id);
+              const sub = assign
+                ? (data.submissions || []).find((s: Row) => s.assignment_id === assign.id)
+                : undefined;
+              return {
+                id: l.id,
+                programmeId: l.programme_id,
+                week: l.sort_order || idx + 1,
+                title: l.title,
+                type: l.lesson_type || 'video',
+                durationMins: l.duration_mins || 15,
+                completed: Boolean(prog?.completed),
+                content: l.content || '',
+                videoUrl: l.gumlet_embed_url || l.video_url || undefined,
+                gumletAssetId: l.gumlet_asset_id || undefined,
+                gumletPlaylistId: l.gumlet_playlist_id || undefined,
+                gumletStatus: l.gumlet_status || undefined,
+                thumbnailUrl: l.gumlet_thumbnail_url || undefined,
+                assignment: assign
+                  ? {
+                      id: assign.id,
+                      title: assign.title,
+                      instructions: assign.instructions,
+                      submissionType: assign.submission_type || 'text',
+                      status: (sub?.status as any) || 'draft',
+                      submittedContent: sub?.content || undefined,
+                      coachFeedback: sub?.feedback || undefined,
+                      score: sub?.score ?? undefined,
+                    }
+                  : undefined,
+              };
+            })}
+            onToggleLessonComplete={lessonId => {
+              const progress = data.progress.find((v: Row) => v.lesson_id === lessonId);
+              const completed = !progress?.completed;
+              const payload = { completed, completed_at: completed ? new Date().toISOString() : null };
+              void run(() =>
+                checked(
+                  progress
+                    ? db!
+                        .from('lesson_progress')
+                        .update(payload)
+                        .eq('id', progress.id)
+                        .eq('user_id', userId)
+                        .select('id')
+                        .single()
+                    : db!
+                        .from('lesson_progress')
+                        .insert({ ...payload, user_id: userId, lesson_id: lessonId })
+                        .select('id')
+                        .single()
+                )
+              );
+            }}
+            onSubmitAssignment={(lessonId, text) => {
+              const assign = (data.assignments || []).find((a: Row) => a.lesson_id === lessonId);
+              const cohortId = data.cohorts?.[0]?.id;
+              if (!assign || !cohortId) return;
+              const existingSub = (data.submissions || []).find((s: Row) => s.assignment_id === assign.id);
+              void run(
+                () =>
+                  checked(
+                    existingSub
+                      ? db!
+                          .from('assignment_submissions')
+                          .update({ content: text.trim(), status: 'submitted', submitted_at: new Date().toISOString() })
+                          .eq('id', existingSub.id)
+                          .eq('user_id', userId)
                           .select('id')
                           .single()
-                      )
-                    );
-                  }}
-                  className="space-y-2"
-                >
-                  <label className="block">
-                    Question
-                    <input name="question" required maxLength={4000} className={inputClass} />
-                  </label>
-                  <button className={buttonClass}>Save question</button>
-                </form>
-                {data.questions
-                  .filter((q: Row) => q.session_id === s.id)
-                  .map((q: Row) => (
-                    <p key={q.id}>
-                      {q.question} — {q.answered ? q.answer || 'Answered' : 'Awaiting answer'}
-                    </p>
-                  ))}
-              </article>
-            ))}
-            <Empty>Joining recorded sessions is unavailable until persistent recording consent is implemented.</Empty>
-          </Panel>
+                      : db!
+                          .from('assignment_submissions')
+                          .insert({
+                            assignment_id: assign.id,
+                            user_id: userId,
+                            cohort_id: cohortId,
+                            content: text.trim(),
+                            status: 'submitted',
+                          })
+                          .select('id')
+                          .single()
+                  ),
+                'Assignment submitted to Coach Chad for review.'
+              );
+            }}
+          />
+        )}
+        {tab === 'live' && (
+          <LiveRoom
+            sessions={data.sessions.map((s: Row) => ({
+              id: s.id,
+              cohortName: data.cohorts?.[0]?.name || 'GYCS Coaching Cohort',
+              title: s.title,
+              scheduledAt: s.scheduled_at,
+              durationMins: s.duration_mins || 60,
+              coachName: 'Chad de Wet',
+              meetingUrl:
+                s.gumlet_embed_url ||
+                s.meeting_url ||
+                'https://play.gumlet.io/embed/live/6adec989e655cfbd8127b254',
+              recordingUrl: s.recording_url || undefined,
+              recordingConsentRequired: Boolean(s.recording_consent_required ?? true),
+              questions: data.questions
+                .filter((q: Row) => q.session_id === s.id)
+                .map((q: Row) => ({
+                  id: q.id,
+                  user: q.user_id === userId ? p.display_name : 'Cohort Member',
+                  text: q.question,
+                  answered: Boolean(q.answered),
+                })),
+            }))}
+            onAddQuestion={(sessionId, question) => {
+              void run(
+                () =>
+                  checked(
+                    db!
+                      .from('session_questions')
+                      .insert({ user_id: userId, session_id: sessionId, question: question.trim() })
+                      .select('id')
+                      .single()
+                  ),
+                'Question added to the live coaching queue.'
+              );
+            }}
+          />
         )}
         {tab === 'privacy' && (
           <Panel title="Privacy requests and consent">

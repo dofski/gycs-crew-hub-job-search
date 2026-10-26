@@ -275,13 +275,11 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
         {video}
       </section>
 
-      {isLive && (
-        <section className="gy-section" id="live-stream" aria-labelledby="live-stream-title">
-          <p className="gy-eyebrow">LIVE STREAMING NOW</p>
-          <h2 id="live-stream-title">Live Coaching Broadcast</h2>
-          <GumletLiveEmbed />
-        </section>
-      )}
+      <section className="gy-section" id="live-stream" aria-labelledby="live-stream-title">
+        <p className="gy-eyebrow">{isLive ? 'LIVE STREAMING NOW' : 'LIVE COACHING BROADCAST'}</p>
+        <h2 id="live-stream-title">Live Coaching Broadcast</h2>
+        <GumletLiveEmbed />
+      </section>
 
       <section className="gy-section" aria-labelledby="problem-title">
         <p className="gy-eyebrow">SOUND FAMILIAR?</p>

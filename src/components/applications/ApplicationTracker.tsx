@@ -20,18 +20,32 @@ interface ApplicationTrackerProps {
   applications: Application[];
   onUpdateStatus: (id: string, newStatus: Application['status']) => void;
   onAddInterview: (id: string, date: string, notes: string) => void;
+  onAddApplication?: (app: {
+    title: string;
+    employer: string;
+    externalUrl?: string;
+    notes?: string;
+    status: Application['status'];
+  }) => void;
 }
 
 export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
   applications,
   onUpdateStatus,
   onAddInterview,
+  onAddApplication,
 }) => {
   const [selectedAppId, setSelectedAppId] = useState<string>(applications[0]?.id || '');
   const [interviewDate, setInterviewDate] = useState('');
   const [interviewNotes, setInterviewNotes] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newEmployer, setNewEmployer] = useState('');
+  const [newExternalUrl, setNewExternalUrl] = useState('');
+  const [newNotes, setNewNotes] = useState('');
+  const [newStatus, setNewStatus] = useState<Application['status']>('saved');
 
-  const selectedApp = applications.find((a) => a.id === selectedAppId);
+  const selectedApp = applications.find((a) => a.id === selectedAppId) || applications[0];
 
   const getStatusColor = (status: Application['status']) => {
     switch (status) {
@@ -74,14 +88,34 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
             Track your partner submissions, dockwalking leads, captain interviews, and offer debriefs.
           </p>
         </div>
-        <div className="text-xs font-mono text-emerald-400">
-          {applications.length} Active Applications
+        <div className="flex items-center gap-3">
+          <div className="text-xs font-mono text-emerald-400">
+            {applications.length} Active Applications
+          </div>
+          {onAddApplication && (
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Log Application</span>
+            </button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Applications List (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
+          {applications.length === 0 && (
+            <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl text-xs text-slate-400 space-y-3">
+              <p>
+                No applications saved yet. Save a vacancy from the <strong>Opportunities</strong> tab or click{' '}
+                <strong>Log Application</strong> above to track a dockwalking contact, crew agency submission, or vessel lead.
+              </p>
+            </div>
+          )}
           {applications.map((app) => (
             <div
               key={app.id}
@@ -208,6 +242,109 @@ export const ApplicationTracker: React.FC<ApplicationTrackerProps> = ({
           )}
         </div>
       </div>
+
+      {showAddModal && onAddApplication && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-white mb-1">Log Application or Dockwalk Lead</h3>
+            <p className="text-xs text-slate-400 mb-4">
+              Record a direct vessel application, crew agency submission, or dockwalking CV drop.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newTitle.trim()) return;
+                onAddApplication({
+                  title: newTitle.trim(),
+                  employer: newEmployer.trim() || 'Vessel / Crew Agency',
+                  externalUrl: newExternalUrl.trim() || undefined,
+                  notes: newNotes.trim() || undefined,
+                  status: newStatus,
+                });
+                setNewTitle('');
+                setNewEmployer('');
+                setNewExternalUrl('');
+                setNewNotes('');
+                setNewStatus('saved');
+                setShowAddModal(false);
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Role / Position Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Junior Deckhand or Seasonal Stewardess"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Vessel / Employer / Crew Agency</label>
+                <input
+                  type="text"
+                  placeholder="e.g. M/Y Example (50m) or Bluewater Antibes"
+                  value={newEmployer}
+                  onChange={(e) => setNewEmployer(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Status</label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value as any)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="saved">Saved</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="interview_scheduled">Interview Scheduled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Listing URL (Optional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newExternalUrl}
+                    onChange={(e) => setNewExternalUrl(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Notes / Port / Contact</label>
+                <textarea
+                  rows={3}
+                  placeholder="Port, chief officer or agent spoken to, follow-up date..."
+                  value={newNotes}
+                  onChange={(e) => setNewNotes(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold"
+                >
+                  Save Application
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

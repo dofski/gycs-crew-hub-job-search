@@ -151,9 +151,9 @@ export default {
         });
       }
 
-      // All course authoring & live stream creation actions require coach or admin role
-      if (caller.role !== 'coach' && caller.role !== 'admin') {
-        return reply(403, { error: 'Coach or administrator permissions required for course authoring.' });
+      // All course authoring & live stream creation actions require coach, admin, or superadmin role
+      if (!['coach', 'admin', 'superadmin'].includes(caller.role)) {
+        return reply(403, { error: 'Coach, administrator, or superadmin permissions required for course authoring.' });
       }
 
       if (action === 'create_course_playlist') {

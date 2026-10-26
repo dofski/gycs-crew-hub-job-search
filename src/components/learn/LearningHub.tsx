@@ -130,18 +130,34 @@ export const LearningHub: React.FC<LearningHubProps> = ({
               </button>
             </div>
 
-            {/* Video or Text Player Mock */}
-            <div className="aspect-video bg-slate-950 rounded-xl border border-slate-800 flex flex-col items-center justify-center p-6 text-center">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
-                <PlayCircle className="w-8 h-8" />
+            {/* Gumlet Video Player or Fallback */}
+            {currentLesson.videoUrl || currentLesson.gumletAssetId ? (
+              <div className="aspect-video bg-slate-950 rounded-xl border border-slate-800 overflow-hidden relative">
+                <iframe
+                  loading="lazy"
+                  title={currentLesson.title || 'Gumlet course video player'}
+                  src={
+                    currentLesson.videoUrl ||
+                    `https://play.gumlet.io/embed/${currentLesson.gumletAssetId}`
+                  }
+                  className="w-full h-full border-0"
+                  referrerPolicy="origin"
+                  allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write"
+                />
               </div>
-              <h4 className="text-sm font-semibold text-slate-200">
-                Interactive Video & Coaching Lecture
-              </h4>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                Presented by Chad de Wet. Streamed via signed private player.
-              </p>
-            </div>
+            ) : (
+              <div className="aspect-video bg-slate-950 rounded-xl border border-slate-800 flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3">
+                  <PlayCircle className="w-8 h-8" />
+                </div>
+                <h4 className="text-sm font-semibold text-slate-200">
+                  Interactive Video &amp; Coaching Lecture
+                </h4>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                  Presented by Chad de Wet. Streamed via signed private Gumlet player.
+                </p>
+              </div>
+            )}
 
             <div className="prose prose-invert prose-xs text-slate-300 leading-relaxed pt-2">
               <p>{currentLesson.content}</p>

@@ -114,6 +114,12 @@ export interface LessonItem {
   durationMins: number;
   completed: boolean;
   content: string;
+  videoUrl?: string;
+  gumletAssetId?: string;
+  gumletPlaylistId?: string;
+  gumletStatus?: string;
+  thumbnailUrl?: string;
+  chapters?: Array<{ label: string; startTime: number }>;
   assignment?: {
     id: string;
     title: string;

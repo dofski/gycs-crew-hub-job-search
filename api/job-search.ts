@@ -2,6 +2,7 @@ import process from 'node:process';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://wfblxexdqlxeequvywfc.supabase.co';
+const edgeProxyUrl = `${supabaseUrl}/functions/v1/job-search-proxy`;
 const jsearchHost = 'jsearch.p.rapidapi.com';
 
 class SafeError extends Error {
@@ -70,10 +71,9 @@ export default {
         return reply(401, { error: 'Sign in with an active GYCS member account to search jobs.' });
       }
 
-      const anon = process.env.VITE_SUPABASE_ANON_KEY?.trim();
-      if (!anon) {
-        return reply(503, { error: 'Supabase server configuration is missing.' });
-      }
+      const anon =
+        process.env.VITE_SUPABASE_ANON_KEY?.trim() ||
+        'sb_publishable_hF8ABp0OCKLvJha8EokQMw_GG2UNEEE';
 
       const db = createClient(supabaseUrl, anon, {
         global: { headers: { Authorization: 'Bearer ' + token } },
@@ -101,9 +101,18 @@ export default {
       if (action === 'search_jobs') {
         const jsearchKey = process.env.JSEARCH_API_KEY?.trim();
         if (!jsearchKey) {
-          return reply(503, {
-            error: 'Live job search is not configured on the server (set JSEARCH_API_KEY in environment variables).',
+          const edgeRes = await fetch(edgeProxyUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+              apikey: anon,
+            },
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(18000),
           });
+          const edgeData = await edgeRes.json().catch(() => ({ error: 'Job search proxy failed.' }));
+          return reply(edgeRes.status, edgeData);
         }
 
         const query =
@@ -147,9 +156,18 @@ export default {
       if (action === 'employer_contacts') {
         const outscraperKey = process.env.OUTSCRAPER_API_KEY?.trim();
         if (!outscraperKey) {
-          return reply(503, {
-            error: 'Employer contact lookup is not configured on the server (set OUTSCRAPER_API_KEY in environment variables).',
+          const edgeRes = await fetch(edgeProxyUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+              apikey: anon,
+            },
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(18000),
           });
+          const edgeData = await edgeRes.json().catch(() => ({ error: 'Employer contacts proxy failed.' }));
+          return reply(edgeRes.status, edgeData);
         }
 
         const rawDomain = typeof body.domain === 'string' ? body.domain.trim() : '';

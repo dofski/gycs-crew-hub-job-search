@@ -16,6 +16,7 @@ import {
   Users
 } from 'lucide-react';
 import type { LiveSession } from '../../types/database.ts';
+import { GumletLiveEmbed, useGumletLiveStatus } from './GumletLiveStream.tsx';
 
 interface LiveRoomProps {
   sessions: LiveSession[];
@@ -26,6 +27,7 @@ export const LiveRoom: React.FC<LiveRoomProps> = ({ sessions, onAddQuestion }) =
   const [selectedSessionId, setSelectedSessionId] = useState<string>(sessions[0]?.id || 'live-1');
   const [recordingConsent, setRecordingConsent] = useState<boolean>(true);
   const [newQuestion, setNewQuestion] = useState<string>('');
+  const { isLive } = useGumletLiveStatus();
 
   const currentSession = sessions.find((s) => s.id === selectedSessionId) || sessions[0];
 
@@ -54,10 +56,18 @@ export const LiveRoom: React.FC<LiveRoomProps> = ({ sessions, onAddQuestion }) =
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs text-emerald-300 font-semibold">Active Cohort Sync</span>
+          <span className={`w-2.5 h-2.5 rounded-full ${isLive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
+          <span className={`text-xs font-semibold ${isLive ? 'text-emerald-300' : 'text-slate-400'}`}>
+            {isLive ? 'Live Stream Active' : 'Stream Offline'}
+          </span>
         </div>
       </div>
+
+      {isLive && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <GumletLiveEmbed />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Session Schedule & Join Link (7 cols) */}

@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import './landing.css';
 import Reviews, {reviewCount} from './Reviews';
+import {GumletLiveEmbed, useGumletLiveStatus} from './components/live/GumletLiveStream';
 
 type Stage = [string, string];
 type Icp = {id: string; tab: string; eyebrow: string; hook: string; pain: string; stages: Stage[]; covers: string[]; cta: string};
@@ -62,6 +63,7 @@ function Booking() {
 export default function Landing({session, canStart, onStart, onSignIn, video}: Props) {
   const [active, setActive] = useState(icps[0].id);
   const [chosen, setChosen] = useState('');
+  const {isLive} = useGumletLiveStatus();
   const icp = icps.find(i => i.id === active) || icps[0];
   const chosenIcp = icps.find(i => i.id === chosen);
   const jump = (target: string) => {
@@ -78,6 +80,14 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
       <p className="gy-small">Tell us where you’re starting. Let’s explore what support makes sense.</p>
       <p className="gy-small">Coached by Chad de Wet. <button className="gy-link" onClick={() => jump('reviews')}>Read {reviewCount} client & crew reviews</button> · <button className="gy-link" onClick={() => jump('my-eye')}>Discover M/Y Eye</button></p>
     </div>{video}</section>
+
+    {isLive && (
+      <section className="gy-section" id="live-stream" aria-labelledby="live-stream-title">
+        <p className="gy-eyebrow">LIVE STREAMING NOW</p>
+        <h2 id="live-stream-title">Live Coaching Broadcast</h2>
+        <GumletLiveEmbed />
+      </section>
+    )}
 
     <section className="gy-section" aria-labelledby="problem-title">
       <p className="gy-eyebrow">SOUND FAMILIAR?</p>

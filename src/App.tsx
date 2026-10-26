@@ -7,6 +7,7 @@ import { OpportunityBoard } from './components/opportunities/OpportunityBoard.ts
 import { CrewMapLocationSettings } from './components/settings/CrewMapLocationSettings.tsx';
 import { ProfileEditor } from './components/settings/ProfileEditor.tsx';
 import { GumletLiveEmbed, useGumletLiveStatus } from './components/live/GumletLiveStream.tsx';
+import { ThemeSwitcher } from './lib/theme.tsx';
 import type { Application, CVData, Opportunity } from './types/database.ts';
 
 type Row = Record<string, any>;
@@ -54,7 +55,7 @@ export default function App() {
   }, []);
   if (!db) return <main className="min-h-screen bg-slate-950 p-8 text-white"><h1>GYCS configuration required</h1><p>Set VITE_SUPABASE_URL to the Green Yacht Crew Solutions project and VITE_SUPABASE_ANON_KEY to its publishable or anon key, then rebuild. Privileged server keys are not accepted.</p></main>;
   if (loading) return <main className="min-h-screen bg-slate-950 p-8 text-white">Restoring your session...</main>;
-  return <div className="min-h-screen bg-slate-950 text-slate-100"><header className="border-b border-slate-800 px-5 py-4"><h1 className="text-xl font-bold">GYCS <span className="text-emerald-400">CREW HUB</span></h1><p className="text-xs text-slate-400">Green Yacht Crew Solutions</p></header><main className="max-w-7xl mx-auto p-5">{error && <p role="alert" className="mb-4 text-rose-300">{error}</p>}{session && !recovery ? <Workspace key={session.user.id} session={session} onSignOut={async () => { const { error } = await db!.auth.signOut(); if (error) setError(error.message); }} /> : <AuthForm recovery={recovery} onRecovered={() => setRecovery(false)} />}</main></div>;
+  return <div className="min-h-screen bg-slate-950 text-slate-100"><header className="border-b border-slate-800 px-5 py-4 flex items-center justify-between gap-4"><div><h1 className="text-xl font-bold">GYCS <span className="text-emerald-400">CREW HUB</span></h1><p className="text-xs text-slate-400">Green Yacht Crew Solutions</p></div><ThemeSwitcher /></header><main className="max-w-7xl mx-auto p-5">{error && <p role="alert" className="mb-4 text-rose-300">{error}</p>}{session && !recovery ? <Workspace key={session.user.id} session={session} onSignOut={async () => { const { error } = await db!.auth.signOut(); if (error) setError(error.message); }} /> : <AuthForm recovery={recovery} onRecovered={() => setRecovery(false)} />}</main></div>;
 }
 
 function AuthForm({ recovery, onRecovered }: { recovery: boolean; onRecovered: () => void }) {

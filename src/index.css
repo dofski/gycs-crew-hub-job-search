@@ -1,1 +1,97 @@
 @import "tailwindcss";
+
+/* Global Light Mode Overrides for GYCS Crew Hub & Workspace */
+body.gy-light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+body.gy-light .gy-global-nav {
+  background: #f1f5f9 !important;
+  color: #065f46 !important;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+body.gy-light .gy-global-nav a {
+  color: #0f172a;
+}
+
+body.gy-light .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
+
+body.gy-light .bg-slate-950\/80,
+body.gy-light .bg-slate-950\/60 {
+  background-color: rgba(248, 250, 252, 0.9) !important;
+}
+
+body.gy-light .bg-slate-900 {
+  background-color: #ffffff !important;
+}
+
+body.gy-light .bg-slate-800 {
+  background-color: #e2e8f0 !important;
+}
+
+body.gy-light .hover\:bg-slate-800:hover,
+body.gy-light .hover\:bg-slate-700:hover {
+  background-color: #cbd5e1 !important;
+}
+
+body.gy-light .border-slate-800,
+body.gy-light .border-slate-800\/80,
+body.gy-light .border-slate-700 {
+  border-color: #cbd5e1 !important;
+}
+
+body.gy-light .text-white,
+body.gy-light .text-slate-100,
+body.gy-light .text-slate-200 {
+  color: #0f172a !important;
+}
+
+body.gy-light .text-slate-300 {
+  color: #334155 !important;
+}
+
+body.gy-light .text-slate-400,
+body.gy-light .text-slate-500 {
+  color: #475569 !important;
+}
+
+body.gy-light .text-emerald-300,
+body.gy-light .text-emerald-400 {
+  color: #047857 !important;
+}
+
+body.gy-light .text-sky-300,
+body.gy-light .text-sky-400,
+body.gy-light .text-cyan-200 {
+  color: #0369a1 !important;
+}
+
+body.gy-light .text-amber-200,
+body.gy-light .text-amber-300,
+body.gy-light .text-amber-400 {
+  color: #b45309 !important;
+}
+
+body.gy-light .text-rose-200,
+body.gy-light .text-rose-300,
+body.gy-light .text-rose-400 {
+  color: #be123c !important;
+}
+
+body.gy-light .text-purple-100,
+body.gy-light .text-purple-200,
+body.gy-light .text-purple-300,
+body.gy-light .text-purple-400 {
+  color: #6d28d9 !important;
+}
+
+/* Keep solid primary CTA button labels crisp white in Light Mode */
+body.gy-light .bg-emerald-600,
+body.gy-light .bg-rose-600,
+body.gy-light .bg-purple-600 {
+  color: #ffffff !important;
+}

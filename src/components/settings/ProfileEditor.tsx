@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+  COACHING_PROGRAMMES,
+  formatCoachingProgrammeLabel,
+  formatUserRoleLabel,
+  isCrewRole,
+  resolvePathwayUserRole,
+  type CoachingProgrammeType,
+} from '../../lib/roles';
 
 const inputClass =
   'w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none';
@@ -43,6 +51,10 @@ export function ProfileEditor({
   const [department, setDepartment] = useState<string>(
     mapCard?.department || intakePayload?.department || 'deck'
   );
+  const [coachingProgramme, setCoachingProgramme] = useState<CoachingProgrammeType>(
+    profile?.coaching_programme === 'one_on_one' ? 'one_on_one' : 'group'
+  );
+  const matchedPathwayRole = resolvePathwayUserRole(department, profile?.pathway_selection, profile?.role);
   const [headline, setHeadline] = useState<string>(
     mapCard?.headline || ''
   );
@@ -112,6 +124,14 @@ export function ProfileEditor({
       );
       if (cardRes.error) throw new Error(cardRes.error.message);
 
+      // 2b. Sync pathway-matched user role and coaching programme
+      const syncRole = resolvePathwayUserRole(validDept, undefined, profile?.role);
+      await db.rpc('gycs_sync_member_pathway_role', {
+        p_department: validDept,
+        p_pathway_selection: syncRole,
+        p_coaching_programme: coachingProgramme,
+      });
+
       // 3. Upsert public.crew_vessel_links if a vessel name is provided
       if (vesselName.trim()) {
         const vesselRes = await db.from('crew_vessel_links').upsert(
@@ -149,8 +169,14 @@ export function ProfileEditor({
             <h2 className="text-lg font-bold text-white">My Profile &amp; Career Parameters</h2>
             <p className="text-xs text-slate-400">
               Account Email: <strong className="text-slate-200">{profile?.email}</strong> · Role:{' '}
-              <span className="uppercase font-mono text-emerald-400">{profile?.role}</span> · Stage:{' '}
-              <span className="font-mono text-sky-300">{profile?.journey_state || 'exploring'}</span>
+              <span className="uppercase font-mono text-emerald-400">
+                {formatUserRoleLabel(isCrewRole(profile?.role) ? matchedPathwayRole : profile?.role)} ({profile?.role})
+              </span>{' '}
+              · Program:{' '}
+              <span className="font-mono text-amber-300">
+                {formatCoachingProgrammeLabel(profile?.coaching_programme || coachingProgramme)}
+              </span>{' '}
+              · Stage: <span className="font-mono text-sky-300">{profile?.journey_state || 'exploring'}</span>
             </p>
           </div>
         </div>
@@ -246,21 +272,33 @@ export function ProfileEditor({
           </h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-xs font-semibold text-slate-300">
-              Target Department
+              Pathway Selection &amp; Matched User Role
               <select
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 className={`${inputClass} mt-1`}
               >
-                <option value="deck">Deck</option>
-                <option value="interior">Interior</option>
-                <option value="engineering">Engineering</option>
-                <option value="galley">Galley / Culinary</option>
-                <option value="other">Other / Undecided</option>
+                <option value="deck">Deck Pathway → Role: Deckhand</option>
+                <option value="interior">Interior Pathway → Role: Steward / Stewardess</option>
+                <option value="engineering">Engineering Pathway → Role: Engineer</option>
+                <option value="galley">Galley / Culinary Pathway → Role: Chef</option>
+                <option value="other">Other / Undecided → Role: Crew Member</option>
               </select>
             </label>
 
             <label className="block text-xs font-semibold text-slate-300">
+              Coaching Program Selection
+              <select
+                value={coachingProgramme}
+                onChange={(e) => setCoachingProgramme(e.target.value as CoachingProgrammeType)}
+                className={`${inputClass} mt-1`}
+              >
+                <option value="one_on_one">{COACHING_PROGRAMMES.one_on_one.title}</option>
+                <option value="group">{COACHING_PROGRAMMES.group.title}</option>
+              </select>
+            </label>
+
+            <label className="block text-xs font-semibold text-slate-300 sm:col-span-2">
               Target Role &amp; Career Headline (max 80 chars)
               <input
                 maxLength={80}

@@ -7,6 +7,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isAllowedStateTransition, summarizeReadinessMatrix } from './pathway-rules.ts';
 import { validateCopy } from './guardrails.ts';
+import {
+  COACHING_PROGRAMMES,
+  formatCoachingProgrammeLabel,
+  formatUserRoleLabel,
+  isCrewRole,
+  isStaffRole,
+  isSuperAdminRole,
+  resolvePathwayUserRole,
+} from './roles.ts';
 import type { ReadinessDimension } from './constants.ts';
 
 test('isAllowedStateTransition permits legal forward journey sequence', () => {
@@ -77,4 +86,34 @@ test('summarizeReadinessMatrix tallies qualitative dimensions without single per
   assert.equal(summary.submitted, 1);
   assert.equal(summary.in_progress, 1);
   assert.equal(summary.not_started, 2);
+});
+
+test('resolvePathwayUserRole matches user role to pathway selection while preserving staff roles', () => {
+  assert.equal(resolvePathwayUserRole('deck'), 'deckhand');
+  assert.equal(resolvePathwayUserRole('interior'), 'steward');
+  assert.equal(resolvePathwayUserRole('engineering'), 'engineer');
+  assert.equal(resolvePathwayUserRole('galley'), 'chef');
+  assert.equal(resolvePathwayUserRole('undecided', 'school-leaver'), 'school_leaver');
+  assert.equal(resolvePathwayUserRole('undecided', 'career-changer'), 'career_changer');
+  assert.equal(resolvePathwayUserRole('undecided', 'aspirant'), 'aspirant');
+  assert.equal(resolvePathwayUserRole('undecided', 'junior-crew'), 'junior_crew');
+
+  // Superadmin and staff roles are never downgraded by pathway selection
+  assert.equal(resolvePathwayUserRole('deck', 'deckhand', 'superadmin'), 'superadmin');
+  assert.equal(resolvePathwayUserRole('interior', 'steward', 'admin'), 'admin');
+  assert.equal(resolvePathwayUserRole('deck', 'deckhand', 'coach'), 'coach');
+
+  assert.equal(isSuperAdminRole('superadmin'), true);
+  assert.equal(isStaffRole('superadmin'), true);
+  assert.equal(isCrewRole('deckhand'), true);
+  assert.equal(isCrewRole('superadmin'), false);
+  assert.equal(formatUserRoleLabel('superadmin'), 'Superadmin');
+  assert.equal(formatUserRoleLabel('deckhand'), 'Deckhand');
+});
+
+test('COACHING_PROGRAMMES defines both single 1on1 and group coaching programs', () => {
+  assert.equal(COACHING_PROGRAMMES.one_on_one.id, 'one_on_one');
+  assert.equal(COACHING_PROGRAMMES.group.id, 'group');
+  assert.equal(formatCoachingProgrammeLabel('one_on_one'), 'Single 1-on-1 Coaching Program');
+  assert.equal(formatCoachingProgrammeLabel('group'), 'Group Coaching Program');
 });

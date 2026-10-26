@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type UserRole = 'member' | 'coach' | 'admin';
+import type { UserRole } from './roles.ts';
+export type { UserRole };
 
 export type JourneyState =
   | 'exploring'

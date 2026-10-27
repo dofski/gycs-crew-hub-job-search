@@ -12,6 +12,8 @@ import {
   LAUNCHPAD_INFRASTRUCTURE,
   LAUNCHPAD_PHASES,
   LAUNCHPAD_WEEKS,
+  LAUNCHPAD_WORKSHEETS,
+  generateClientWorkbookMarkdown,
 } from './lib/launchpad-syllabus';
 import {trackBookCallEvent, trackStartApplicationEvent} from './lib/analytics';
 
@@ -408,9 +410,48 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
             <a className="gy-primary" href="/?workspace=1">
               Open 8-Week Course in Crew Hub →
             </a>
+            <button
+              className="gy-outline"
+              type="button"
+              onClick={() => {
+                const md = generateClientWorkbookMarkdown();
+                const blob = new Blob([md], {type: 'text/markdown;charset=utf-8'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'GYCS-8-Week-Superyacht-Career-Launchpad-Client-Workbook.md';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Download 8-Week Client Workbook (.md) ↓
+            </button>
             <button className="gy-outline" onClick={() => book('syllabus_section')}>
               Book a Strategy Call ↓
             </button>
+          </div>
+        </div>
+
+        <div className="gy-card" style={{marginTop: '24px'}}>
+          <p className="gy-eyebrow">FOLLOW-ALONG CLIENT WORKSHEETS &amp; CHECKLISTS (48 CHECKPOINTS)</p>
+          <h3>Every week includes a 6-point operational checklist &amp; 4-part GROW worksheet.</h3>
+          <p className="gy-small" style={{marginBottom: '16px'}}>
+            Clients complete these interactive worksheets inside the GYCS Crew Hub (Web &amp; Android) with automatic sync to Coach Chad de Wet.
+          </p>
+          <div className="gy-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px'}}>
+            {LAUNCHPAD_WORKSHEETS.map(ws => (
+              <div key={ws.week} style={{padding: '12px', border: '1px solid rgba(148,163,184,0.2)', borderRadius: '12px'}}>
+                <p className="gy-eyebrow">WEEK 0{ws.week} CHECKLIST</p>
+                <h4 style={{marginBottom: '6px'}}>{ws.worksheetTitle.replace(/^Week \d+ Worksheet:\s*/, '')}</h4>
+                <ul className="gy-ticks">
+                  {ws.checklistItems.slice(0, 3).map(item => (
+                    <li key={item.id}>{item.label}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>

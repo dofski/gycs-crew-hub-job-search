@@ -10,6 +10,7 @@ import { OpportunityBoard } from './components/opportunities/OpportunityBoard.ts
 import { MilestoneTimeline } from './components/pathway/MilestoneTimeline.tsx';
 import { CrewMapLocationSettings } from './components/settings/CrewMapLocationSettings.tsx';
 import { ProfileEditor } from './components/settings/ProfileEditor.tsx';
+import { LaunchpadWorksheets } from './components/worksheets/LaunchpadWorksheets.tsx';
 import { SOURCED_REQUIREMENTS, type Department, type Milestone, type ReadinessDimension, type Requirement } from './lib/constants.ts';
 import { LAUNCHPAD_INFRASTRUCTURE, LAUNCHPAD_PHASES, PORT_RUNWAY_BENCHMARKS } from './lib/launchpad-syllabus.ts';
 import { ThemeSwitcher } from './lib/theme.tsx';
@@ -630,6 +631,7 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
     ['opportunities', 'Opportunities'],
     ['applications', 'Applications'],
     ['learn', 'Learning'],
+    ['worksheets', 'Worksheets & checklists'],
     ['live', 'Live sessions'],
     ['privacy', 'Privacy'],
     ['outcomes', 'Outcomes'],
@@ -715,6 +717,13 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
               <div className="flex flex-wrap gap-2 pt-1">
                 <button type="button" onClick={() => setTab('learn')} className={buttonClass}>
                   Open 8-Week Launchpad Course
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTab('worksheets')}
+                  className="rounded-lg border border-teal-500/40 bg-teal-950/30 px-3.5 py-2 text-xs font-semibold text-teal-300 hover:border-teal-400"
+                >
+                  Client Worksheets &amp; Checklists
                 </button>
                 <button
                   type="button"
@@ -1558,6 +1567,80 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
                           .single()
                   ),
                 'Assignment submitted to Coach Chad for review.'
+              );
+            }}
+          />
+        )}
+        {tab === 'worksheets' && (
+          <LaunchpadWorksheets
+            memberName={p.display_name}
+            targetRole={activePathway?.target_role || formatUserRoleLabel(p.role)}
+            coachingProgramme={formatCoachingProgrammeLabel(p.coaching_programme)}
+            lessons={data.lessons.map((l: Row, idx: number) => {
+              const prog = data.progress.find((v: Row) => v.lesson_id === l.id);
+              const assign = (data.assignments || []).find((a: Row) => a.lesson_id === l.id);
+              const sub = assign
+                ? (data.submissions || []).find((s: Row) => s.assignment_id === assign.id)
+                : undefined;
+              return {
+                id: l.id,
+                programmeId: l.programme_id,
+                week: l.sort_order || idx + 1,
+                title: l.title,
+                type: l.lesson_type || 'video',
+                durationMins: l.duration_mins || 45,
+                completed: Boolean(prog?.completed),
+                content: l.content || '',
+                assignment: assign
+                  ? {
+                      id: assign.id,
+                      title: assign.title,
+                      instructions: assign.instructions,
+                      submissionType: assign.submission_type || 'text',
+                      status: (sub?.status as any) || 'draft',
+                      submittedContent: sub?.content || undefined,
+                      coachFeedback: sub?.feedback || undefined,
+                      score: sub?.score ?? undefined,
+                    }
+                  : undefined,
+              };
+            })}
+            onSaveWorksheet={(lessonId, serializedMarkdown, submitToCoach) => {
+              const assign = (data.assignments || []).find((a: Row) => a.lesson_id === lessonId);
+              const cohortId = data.cohorts?.[0]?.id;
+              if (!assign || !cohortId) return;
+              const existingSub = (data.submissions || []).find((s: Row) => s.assignment_id === assign.id);
+              const nextStatus = submitToCoach ? 'submitted' : existingSub?.status || 'draft';
+              void run(
+                () =>
+                  checked(
+                    existingSub
+                      ? db!
+                          .from('assignment_submissions')
+                          .update({
+                            content: serializedMarkdown.trim(),
+                            status: nextStatus,
+                            submitted_at: new Date().toISOString(),
+                          })
+                          .eq('id', existingSub.id)
+                          .eq('user_id', userId)
+                          .select('id')
+                          .single()
+                      : db!
+                          .from('assignment_submissions')
+                          .insert({
+                            assignment_id: assign.id,
+                            user_id: userId,
+                            cohort_id: cohortId,
+                            content: serializedMarkdown.trim(),
+                            status: nextStatus,
+                          })
+                          .select('id')
+                          .single()
+                  ),
+                submitToCoach
+                  ? 'Worksheet & Checklist submitted to Coach Chad for review.'
+                  : 'Worksheet & Checklist progress saved to Supabase.'
               );
             }}
           />

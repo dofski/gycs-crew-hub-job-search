@@ -29,7 +29,9 @@ import {
   Layers,
   Wrench,
   BookOpen,
+  ClipboardCheck,
 } from 'lucide-react';
+import { LaunchpadWorksheets } from '../worksheets/LaunchpadWorksheets.tsx';
 
 interface LearningHubProps {
   lessons: LessonItem[];
@@ -50,7 +52,8 @@ export const LearningHub: React.FC<LearningHubProps> = ({
   const [selectedLessonId, setSelectedLessonId] = useState<string>(lessons[0]?.id || '');
   const [assignmentText, setAssignmentText] = useState('');
   const [questionText, setQuestionText] = useState('');
-  const [activeSubTab, setActiveSubTab] = useState<'curriculum' | 'matrix' | 'live'>('curriculum');
+  const [activeSubTab, setActiveSubTab] = useState<'curriculum' | 'worksheets' | 'matrix' | 'live'>('curriculum');
+  const [worksheetTargetWeek, setWorksheetTargetWeek] = useState<number>(1);
   const [consentChecked, setConsentChecked] = useState<Record<string, boolean>>({});
   const [selectedPhaseFilter, setSelectedPhaseFilter] = useState<'all' | 'know' | 'prepare' | 'execute'>('all');
 
@@ -136,6 +139,20 @@ export const LearningHub: React.FC<LearningHubProps> = ({
             >
               <PlayCircle className="w-4 h-4" />
               8-Week Modules ({completedCount}/{enrichedLessons.length})
+            </button>
+            <button
+              onClick={() => {
+                setWorksheetTargetWeek(activeLesson?.week || 1);
+                setActiveSubTab('worksheets');
+              }}
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 ${
+                activeSubTab === 'worksheets'
+                  ? 'bg-teal-500 text-slate-950 shadow-lg shadow-teal-500/20 font-bold'
+                  : 'bg-slate-950/80 text-slate-400 hover:text-white border border-slate-800'
+              }`}
+            >
+              <ClipboardCheck className="w-4 h-4" />
+              Worksheets &amp; Checklists
             </button>
             <button
               onClick={() => setActiveSubTab('matrix')}
@@ -456,6 +473,30 @@ export const LearningHub: React.FC<LearningHubProps> = ({
                   </div>
                 </div>
 
+                {/* Open Interactive Week Worksheet & Follow-Along Checklist Banner */}
+                <div className="bg-slate-950/80 border border-teal-500/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-teal-300 flex items-center gap-1.5">
+                      <ClipboardCheck className="w-4 h-4 text-teal-400" />
+                      Week 0{activeLesson.week} Interactive Client Worksheet &amp; Follow-Along Checklist
+                    </div>
+                    <p className="text-xs text-slate-300">
+                      Complete the 6-point operational checklist and 4 structured worksheet exercises for Week {activeLesson.week}, or export a printable Markdown copy.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorksheetTargetWeek(activeLesson.week);
+                      setActiveSubTab('worksheets');
+                    }}
+                    className="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold shrink-0 flex items-center gap-1.5 transition-all"
+                  >
+                    <ClipboardCheck className="w-3.5 h-3.5" />
+                    Open Week {activeLesson.week} Worksheet
+                  </button>
+                </div>
+
                 {/* Assignment Box */}
                 {activeLesson.assignment && (
                   <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-5 space-y-4">
@@ -539,6 +580,16 @@ export const LearningHub: React.FC<LearningHubProps> = ({
             )}
           </div>
         </div>
+      )}
+
+      {activeSubTab === 'worksheets' && (
+        <LaunchpadWorksheets
+          lessons={enrichedLessons}
+          initialWeek={worksheetTargetWeek}
+          onSaveWorksheet={(lessonId, serializedMarkdown) => {
+            onSubmitAssignment(lessonId, serializedMarkdown);
+          }}
+        />
       )}
 
       {activeSubTab === 'matrix' && (

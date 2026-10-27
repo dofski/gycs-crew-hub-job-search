@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2023",
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "module": "ESNext",
-    "types": ["vite/client"],
+    "types": [
+      "vite/client"
+    ],
     "lib": [
-      "ES2022",
+      "ES2023",
       "DOM",
       "DOM.Iterable"
     ],
@@ -19,10 +21,81 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "#react-pdf-renderer": [
+        "./packages/pdf/src/forme/primitives.tsx"
+      ],
+      "@reactive-resume/fonts": [
+        "./packages/fonts/src/index.ts"
+      ],
+      "@reactive-resume/docx": [
+        "./packages/docx/src/index.ts"
+      ],
+      "@reactive-resume/pdf/icons": [
+        "./packages/pdf/src/forme/phosphor-icons/all.ts"
+      ],
+      "@reactive-resume/pdf/browser": [
+        "./packages/pdf/src/browser.tsx"
+      ],
+      "@reactive-resume/pdf/page-map": [
+        "./packages/pdf/src/page-map.ts"
+      ],
+      "@reactive-resume/pdf/semantic-legacy": [
+        "./packages/pdf/src/semantic/legacy-converter.ts"
+      ],
+      "@reactive-resume/pdf/semantic-tree": [
+        "./packages/pdf/src/semantic/tree.ts"
+      ],
+      "@reactive-resume/pdf/filtering": [
+        "./packages/pdf/src/templates/shared/filtering.ts"
+      ],
+      "@reactive-resume/pdf/section-title": [
+        "./packages/pdf/src/section-title.ts"
+      ],
+      "@reactive-resume/pdf/web-page": [
+        "./packages/pdf/src/html/web-page.tsx"
+      ],
+      "@reactive-resume/pdf/web-page-card": [
+        "./packages/pdf/src/html/card.ts"
+      ],
+      "@reactive-resume/pdf/web-page-document": [
+        "./packages/pdf/src/html/document.ts"
+      ],
+      "@reactive-resume/pdf/web-page-messages": [
+        "./packages/pdf/src/html/messages.ts"
+      ],
+      "@reactive-resume/resume/ats": [
+        "./packages/resume/src/ats/index.ts"
+      ],
+      "@reactive-resume/resume/ats-pdf": [
+        "./packages/resume/src/ats-pdf/index.ts"
+      ],
+      "@reactive-resume/resume/stylesheet/registry": [
+        "./packages/resume/src/stylesheet/registry/index.ts"
+      ],
+      "@reactive-resume/resume/stylesheet/types": [
+        "./packages/resume/src/stylesheet/semantic-types.ts"
+      ],
+      "@reactive-resume/resume/stylesheet": [
+        "./packages/resume/src/stylesheet/index.ts"
+      ],
+      "@reactive-resume/resume/*": [
+        "./packages/resume/src/*"
+      ],
+      "@reactive-resume/schema/*": [
+        "./packages/schema/src/*"
+      ],
+      "@reactive-resume/utils/*": [
+        "./packages/utils/src/*"
+      ],
+      "@reactive-resume/import/*": [
+        "./packages/import/src/*"
       ]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "exclude": ["dist"]
+  "exclude": [
+    "dist"
+  ]
 }

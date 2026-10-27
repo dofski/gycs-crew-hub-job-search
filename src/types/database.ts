@@ -126,6 +126,11 @@ export interface CVData {
     preferredPorts?: string;
     runwayMonths?: number;
     hobbiesAndInterests?: string;
+    template?: string;
+    accentColor?: string;
+    fontFamily?: string;
+    pageFormat?: 'a4' | 'letter';
+    avatarUrl?: string;
   };
   coachComments?: string;
   isCurrent: boolean;

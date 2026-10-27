@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   FileText,
   Printer,
@@ -17,6 +17,13 @@ import {
   Wrench,
   Users,
   Compass,
+  Upload,
+  Download,
+  Sparkles,
+  CheckCircle2,
+  RefreshCw,
+  LayoutTemplate,
+  FileSearch,
 } from 'lucide-react';
 import type {
   CVData,
@@ -25,6 +32,20 @@ import type {
   VerificationStatus,
 } from '../../types/database.ts';
 import { validateCopy } from '../../lib/guardrails.ts';
+import {
+  CV_ACCENT_PRESETS,
+  CV_FONT_PRESETS,
+  CV_TEMPLATES,
+  downloadBlob,
+  generateCvDocxBlob,
+  generateCvJsonBlob,
+  generateCvMarkdownBlob,
+  generateCvPdfBlob,
+  getSanitizedCvFileName,
+  getValidTemplate,
+  importCvFile,
+  runCvAtsReport,
+} from '../../lib/cv-engine.ts';
 
 interface CVStudioProps {
   cvData: CVData;
@@ -37,12 +58,20 @@ const inputClass =
 
 export const CVStudio: React.FC<CVStudioProps> = ({ cvData, busy = false, onSaveCV }) => {
   const [data, setData] = useState<CVData>(cvData);
-  const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'pdf' | 'ats' | 'preview'>('editor');
   const [visasInput, setVisasInput] = useState<string>((cvData.personalInfo.visas || []).join(', '));
   const [languagesInput, setLanguagesInput] = useState<string>(
     (cvData.personalInfo.languages || []).join(', ')
   );
   const [newSkillName, setNewSkillName] = useState<string>('');
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState<boolean>(false);
+  const [exportBusy, setExportBusy] = useState<string | null>(null);
+  const [engineNotice, setEngineNotice] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [jobDescText, setJobDescText] = useState<string>(
+    'Seeking Deckhand / Steward(ess) for 55m+ Motor Yacht. Required: valid STCW Basic Safety Training, ENG1 medical fitness certificate, Seaman Book, B1/B2 or Schengen visa, tender driving / PBL2, washdowns, line handling, watchkeeping, guest service, and verifiable yacht or hospitality references.'
+  );
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setData(cvData);
@@ -187,28 +216,174 @@ export const CVStudio: React.FC<CVStudioProps> = ({ cvData, busy = false, onSave
   };
 
   const additional = data.additional || {};
+  const selectedTemplate = getValidTemplate(additional.template);
+  const selectedAccent = additional.accentColor || CV_ACCENT_PRESETS[0].value;
+  const selectedFont = additional.fontFamily || CV_FONT_PRESETS[0];
+  const selectedFormat = additional.pageFormat || 'a4';
+
+  const buildCurrentPayload = (): CVData => {
+    const parsedVisas = visasInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const parsedLanguages = languagesInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return {
+      ...data,
+      personalInfo: {
+        ...data.personalInfo,
+        visas: parsedVisas,
+        languages: parsedLanguages,
+      },
+    };
+  };
+
+  const refreshPdfPreview = async (overrideData?: CVData) => {
+    setPdfBusy(true);
+    setEngineNotice(null);
+    try {
+      const blob = await generateCvPdfBlob(overrideData || buildCurrentPayload());
+      const nextUrl = URL.createObjectURL(blob);
+      setPdfUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return nextUrl;
+      });
+    } catch (err) {
+      setEngineNotice({
+        type: 'err',
+        text: err instanceof Error ? err.message : 'Could not render PDF preview.',
+      });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'pdf') {
+      void refreshPdfPreview();
+    }
+  }, [activeTab, selectedTemplate, selectedAccent, selectedFont, selectedFormat]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [pdfUrl]);
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setExportBusy('import');
+    setEngineNotice(null);
+    try {
+      const { cv: merged, kind, sectionsCount, entriesCount } = await importCvFile(
+        file,
+        buildCurrentPayload()
+      );
+      setData(merged);
+      setVisasInput((merged.personalInfo.visas || []).join(', '));
+      setLanguagesInput((merged.personalInfo.languages || []).join(', '));
+      setEngineNotice({
+        type: 'ok',
+        text: `Imported ${kind} (${sectionsCount} sections, ${entriesCount} items marked 'uploaded'). Review fields below and click Save New CV Version to persist to Supabase.`,
+      });
+      if (activeTab === 'pdf') {
+        void refreshPdfPreview(merged);
+      }
+    } catch (err) {
+      setEngineNotice({
+        type: 'err',
+        text: err instanceof Error ? err.message : 'Could not import CV file.',
+      });
+    } finally {
+      setExportBusy(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleExport = async (format: 'pdf' | 'docx' | 'md' | 'json') => {
+    setExportBusy(format);
+    setEngineNotice(null);
+    try {
+      const current = buildCurrentPayload();
+      if (format === 'pdf') {
+        const blob = await generateCvPdfBlob(current);
+        downloadBlob(blob, getSanitizedCvFileName(current, 'pdf'));
+      } else if (format === 'docx') {
+        const blob = await generateCvDocxBlob(current);
+        downloadBlob(blob, getSanitizedCvFileName(current, 'docx'));
+      } else if (format === 'md') {
+        const blob = generateCvMarkdownBlob(current);
+        downloadBlob(blob, getSanitizedCvFileName(current, 'md'));
+      } else {
+        const blob = generateCvJsonBlob(current);
+        downloadBlob(blob, getSanitizedCvFileName(current, 'json'));
+      }
+      setEngineNotice({
+        type: 'ok',
+        text: `Downloaded ${format.toUpperCase()} export (${getSanitizedCvFileName(current, format)}).`,
+      });
+    } catch (err) {
+      setEngineNotice({
+        type: 'err',
+        text: err instanceof Error ? err.message : `Failed to export ${format.toUpperCase()}.`,
+      });
+    } finally {
+      setExportBusy(null);
+    }
+  };
+
+  const atsReport = useMemo(() => {
+    if (activeTab !== 'ats') return null;
+    try {
+      return runCvAtsReport(buildCurrentPayload(), jobDescText);
+    } catch {
+      return null;
+    }
+  }, [activeTab, data, visasInput, languagesInput, jobDescText]);
 
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-bold text-white font-['Space_Grotesk']">
               Structured Maritime CV Studio
             </h2>
             <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               {data.version > 0 ? `Saved Version ${data.version}` : 'New Draft (v1)'}
             </span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/10 text-sky-300 border border-sky-500/20">
+              18-Template WASM Engine
+            </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Saving creates a new immutable version in Supabase. Self-entered items are recorded with{' '}
-            <code className="text-emerald-300">claimed</code> provenance until verified by your coach.
+            Saving creates a new immutable version in Supabase. Import an existing PDF/LinkedIn/JSON CV, customize across 18 maritime-ready templates, run ATS &amp; job-keyword checks, or export to PDF &amp; Word.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.json,.zip"
+            onChange={handleImportFile}
+            className="hidden"
+          />
+          <button
+            type="button"
+            disabled={Boolean(exportBusy)}
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-100 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+          >
+            <Upload className="w-3.5 h-3.5 text-emerald-400" />
+            {exportBusy === 'import' ? 'Importing...' : 'Import PDF / JSON / LinkedIn'}
+          </button>
+
+          <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex flex-wrap items-center gap-1">
             <button
               type="button"
               onClick={() => setActiveTab('editor')}
@@ -218,7 +393,31 @@ export const CVStudio: React.FC<CVStudioProps> = ({ cvData, busy = false, onSave
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Structured Editor
+              1. Structured Editor
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('pdf')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                activeTab === 'pdf'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <LayoutTemplate className="w-3.5 h-3.5" />
+              2. Templates &amp; PDF Engine
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('ats')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                activeTab === 'ats'
+                  ? 'bg-sky-600 text-white'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <FileSearch className="w-3.5 h-3.5" />
+              3. ATS &amp; Job Match
             </button>
             <button
               type="button"
@@ -229,7 +428,7 @@ export const CVStudio: React.FC<CVStudioProps> = ({ cvData, busy = false, onSave
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              Maritime Preview / PDF
+              Quick Print Card
             </button>
           </div>
 
@@ -243,6 +442,32 @@ export const CVStudio: React.FC<CVStudioProps> = ({ cvData, busy = false, onSave
           </button>
         </div>
       </div>
+
+      {engineNotice && (
+        <div
+          className={`p-3.5 rounded-xl text-xs flex items-center justify-between gap-3 border ${
+            engineNotice.type === 'ok'
+              ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+              : 'bg-rose-950/40 border-rose-500/40 text-rose-200'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {engineNotice.type === 'ok' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            )}
+            <span>{engineNotice.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setEngineNotice(null)}
+            className="text-[11px] underline opacity-80 hover:opacity-100"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Coach Commentary Bar */}
       {data.coachComments && (
@@ -999,6 +1224,373 @@ export const CVStudio: React.FC<CVStudioProps> = ({ cvData, busy = false, onSave
             </button>
           </div>
         </form>
+      )}
+
+      {/* TEMPLATES & WASM PDF ENGINE TAB */}
+      {activeTab === 'pdf' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left sidebar: 18 Templates + Design + Multi-format Export */}
+          <div className="lg:col-span-5 space-y-5">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <LayoutTemplate className="w-4 h-4 text-emerald-400" />
+                  Select Yacht CV Template (18 Layouts)
+                </h3>
+                <span className="text-[11px] font-mono text-emerald-400 uppercase">
+                  Active: {selectedTemplate}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
+                {CV_TEMPLATES.map((tpl) => {
+                  const isSelected = selectedTemplate === tpl.id;
+                  return (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() =>
+                        setData({
+                          ...data,
+                          additional: { ...additional, template: tpl.id },
+                        })
+                      }
+                      className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-emerald-950/50 border-emerald-500 text-white shadow-md'
+                          : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-bold">{tpl.label}</span>
+                        {tpl.atsRecommended && (
+                          <span className="px-1.5 py-0.5 text-[9px] font-mono bg-emerald-500/20 text-emerald-300 rounded">
+                            ATS
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-1 line-clamp-1">{tpl.tag}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Accent Color, Font & Page Format */}
+              <div className="pt-3 border-t border-slate-800 space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1.5">Header &amp; Accent Palette</label>
+                  <div className="flex flex-wrap gap-2">
+                    {CV_ACCENT_PRESETS.map((preset) => (
+                      <button
+                        key={preset.value}
+                        type="button"
+                        onClick={() =>
+                          setData({
+                            ...data,
+                            additional: { ...additional, accentColor: preset.value },
+                          })
+                        }
+                        className={`px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 text-[11px] transition ${
+                          selectedAccent === preset.value
+                            ? 'border-white bg-slate-800 text-white font-semibold'
+                            : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'
+                        }`}
+                      >
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0 border border-white/20"
+                          style={{ backgroundColor: preset.hex }}
+                        />
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Typography</label>
+                    <select
+                      value={selectedFont}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          additional: { ...additional, fontFamily: e.target.value },
+                        })
+                      }
+                      className={inputClass}
+                    >
+                      {CV_FONT_PRESETS.map((f) => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Page Size</label>
+                    <select
+                      value={selectedFormat}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          additional: {
+                            ...additional,
+                            pageFormat: e.target.value === 'letter' ? 'letter' : 'a4',
+                          },
+                        })
+                      }
+                      className={inputClass}
+                    >
+                      <option value="a4">A4 (International Yacht Standard)</option>
+                      <option value="letter">US Letter</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Export Actions */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Download className="w-4 h-4 text-emerald-400" />
+                Download &amp; Portable Exports
+              </h3>
+              <p className="text-xs text-slate-400">
+                Generated directly in your browser using the embedded Forme WebAssembly vector PDF and DOCX engines.
+              </p>
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  disabled={Boolean(exportBusy)}
+                  onClick={() => handleExport('pdf')}
+                  className="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {exportBusy === 'pdf' ? 'Building PDF...' : 'Download PDF'}
+                </button>
+                <button
+                  type="button"
+                  disabled={Boolean(exportBusy)}
+                  onClick={() => handleExport('docx')}
+                  className="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white border border-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                >
+                  <FileText className="w-3.5 h-3.5 text-sky-400" />
+                  {exportBusy === 'docx' ? 'Building DOCX...' : 'Download Word (.docx)'}
+                </button>
+                <button
+                  type="button"
+                  disabled={Boolean(exportBusy)}
+                  onClick={() => handleExport('md')}
+                  className="px-3 py-2 bg-slate-950 hover:bg-slate-800 disabled:opacity-50 text-slate-300 border border-slate-800 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition"
+                >
+                  {exportBusy === 'md' ? 'Exporting...' : 'Export Markdown (.md)'}
+                </button>
+                <button
+                  type="button"
+                  disabled={Boolean(exportBusy)}
+                  onClick={() => handleExport('json')}
+                  className="px-3 py-2 bg-slate-950 hover:bg-slate-800 disabled:opacity-50 text-slate-300 border border-slate-800 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition"
+                >
+                  {exportBusy === 'json' ? 'Exporting...' : 'Export Portable JSON'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right column: Live Vector PDF Preview */}
+          <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col min-h-[680px]">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white">
+                  Live Vector PDF Preview ({selectedTemplate.toUpperCase()})
+                </span>
+                {pdfBusy && (
+                  <span className="text-[11px] text-emerald-400 font-mono animate-pulse">
+                    Rendering WASM PDF...
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                disabled={pdfBusy}
+                onClick={() => void refreshPdfPreview()}
+                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs flex items-center gap-1.5 transition"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${pdfBusy ? 'animate-spin' : ''}`} />
+                Refresh PDF
+              </button>
+            </div>
+
+            {pdfUrl ? (
+              <iframe
+                title="GYCS Maritime CV PDF Preview"
+                src={pdfUrl}
+                className="w-full flex-1 rounded-xl border border-slate-800 bg-white min-h-[620px]"
+              />
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs gap-2">
+                <RefreshCw className="w-6 h-6 text-emerald-400 animate-spin" />
+                <span>Generating vector PDF preview in browser...</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ATS & JOB DESCRIPTION MATCH TAB */}
+      {activeTab === 'ats' && atsReport && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: ATS Structural & Readability Audit */}
+          <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  ATS Readability &amp; Structure Score
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Checks contact completeness, section headings, date formatting, and recruitment software parseability.
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-2xl font-extrabold text-emerald-400 font-mono">
+                  {atsReport.ats.score}%
+                </span>
+                <span className="block text-[10px] text-slate-400 font-mono">
+                  {atsReport.ats.passedRules}/{atsReport.ats.totalRules} rules passed
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2">
+              {Object.entries(atsReport.ats.categories).map(([cat, stats]) => (
+                <div
+                  key={cat}
+                  className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-center"
+                >
+                  <span className="text-[10px] uppercase font-mono text-slate-400 block">
+                    {cat}
+                  </span>
+                  <span className="text-sm font-bold text-white font-mono">
+                    {stats.passed}/{stats.total}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                Audit Findings ({atsReport.ats.findings.length})
+              </h4>
+              {atsReport.ats.findings.length === 0 ? (
+                <div className="p-4 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-200">
+                  All ATS structural and contact checks passed.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                  {atsReport.ats.findings.map((finding) => (
+                    <div
+                      key={finding.key}
+                      className={`p-3 rounded-xl border text-xs flex items-start justify-between gap-2 ${
+                        finding.severity === 'error'
+                          ? 'bg-rose-950/30 border-rose-500/30 text-rose-200'
+                          : finding.severity === 'warning'
+                            ? 'bg-amber-950/30 border-amber-500/30 text-amber-200'
+                            : 'bg-slate-950 border-slate-800 text-slate-300'
+                      }`}
+                    >
+                      <div>
+                        <span className="font-mono font-bold text-[11px] uppercase">
+                          [{finding.severity}] {finding.code.replace(/_/g, ' ')}
+                        </span>
+                        <p className="text-[11px] opacity-85 mt-0.5 font-mono">
+                          Location: {finding.pointer || '/'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Yacht Job / Agency Brief Keyword Matcher */}
+          <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-sky-400" />
+                  Yacht Role &amp; Agency Brief Keyword Match
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Paste a superyacht job advert or crew-agency requirement brief to see which terms your CV covers.
+                </p>
+              </div>
+              {atsReport.jd && (
+                <div className="text-right">
+                  <span className="text-2xl font-extrabold text-sky-400 font-mono">
+                    {Math.round(atsReport.jd.weightedCoverage * 100)}%
+                  </span>
+                  <span className="block text-[10px] text-slate-400 font-mono">
+                    {atsReport.jd.matchedCount}/{atsReport.jd.totalTerms} terms
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <textarea
+              rows={4}
+              value={jobDescText}
+              onChange={(e) => setJobDescText(e.target.value)}
+              placeholder="Paste a yacht job description or crew agency requirement list here..."
+              className={inputClass}
+            />
+
+            {atsReport.jd && (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <span className="font-bold text-emerald-400 block mb-1.5">
+                    Matched on Your CV ({atsReport.jd.matchedTerms.length})
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {atsReport.jd.matchedTerms.length === 0 ? (
+                      <span className="text-slate-500">No matching terms yet.</span>
+                    ) : (
+                      atsReport.jd.matchedTerms.map((term) => (
+                        <span
+                          key={term}
+                          className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-[11px]"
+                        >
+                          ✓ {term}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="font-bold text-amber-400 block mb-1.5">
+                    Missing From Your CV ({atsReport.jd.missingTerms.length})
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {atsReport.jd.missingTerms.length === 0 ? (
+                      <span className="text-emerald-400">Every extracted requirement term is present!</span>
+                    ) : (
+                      atsReport.jd.missingTerms.map((term) => (
+                        <span
+                          key={term}
+                          className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[11px]"
+                        >
+                          + {term}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* PREVIEW / PDF TAB */}

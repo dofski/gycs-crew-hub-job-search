@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://wfblxexdqlxeequvywfc.supabase.co';
 const edgeProxyUrl = `${supabaseUrl}/functions/v1/job-search-proxy`;
-const jsearchHost = 'jsearch.p.rapidapi.com';
+const defaultJsearchHost = 'jsearch-mega.p.rapidapi.com';
 
 class SafeError extends Error {
   constructor(public status: number, message: string) {
@@ -48,6 +48,55 @@ async function bodyJSON(request: Request) {
   }
 }
 
+async function forwardToEdgeProxy(token: string, anon: string, body: unknown) {
+  const edgeRes = await fetch(edgeProxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      apikey: anon,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(18000),
+  });
+  const edgeData = await edgeRes.json().catch(() => ({ error: 'Job search proxy failed.' }));
+  return reply(edgeRes.status, edgeData);
+}
+
+async function callJsearchMega(
+  endpointPath: string,
+  params: Record<string, string>,
+  jsearchHost: string,
+  jsearchKey: string
+) {
+  const upstreamUrl = new URL(`https://${jsearchHost}${endpointPath}`);
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== '') {
+      upstreamUrl.searchParams.set(k, v);
+    }
+  }
+
+  const upstream = await fetch(upstreamUrl.toString(), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-rapidapi-host': jsearchHost,
+      'x-rapidapi-key': jsearchKey,
+    },
+    signal: AbortSignal.timeout(18000),
+    redirect: 'error',
+  });
+
+  if (!upstream.ok) {
+    throw new SafeError(
+      upstream.status === 429 ? 429 : 502,
+      `Job search provider returned HTTP ${upstream.status}.`
+    );
+  }
+
+  return upstream.json();
+}
+
 export default {
   async fetch(request: Request) {
     try {
@@ -62,7 +111,7 @@ export default {
         'https://gycs-crew-hub-job-search.vercel.app',
         ...(process.env.VERCEL_URL ? ['https://' + process.env.VERCEL_URL] : []),
       ];
-      if (origin && !allowed.includes(origin)) {
+      if (origin && !allowed.includes(origin) && !origin.startsWith('http://localhost:')) {
         return reply(403, { error: 'Origin not permitted' });
       }
 
@@ -97,77 +146,139 @@ export default {
 
       const body = await bodyJSON(request);
       const action = typeof body?.action === 'string' ? body.action : '';
+      const jsearchKey = process.env.JSEARCH_API_KEY?.trim();
+      const jsearchHost = process.env.JSEARCH_API_HOST?.trim() || defaultJsearchHost;
 
-      if (action === 'search_jobs') {
-        const jsearchKey = process.env.JSEARCH_API_KEY?.trim();
+      if (
+        action === 'search_jobs' ||
+        action === 'job_details' ||
+        action === 'company_job_salary' ||
+        action === 'estimated_salary'
+      ) {
         if (!jsearchKey) {
-          const edgeRes = await fetch(edgeProxyUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-              apikey: anon,
+          return forwardToEdgeProxy(token, anon, body);
+        }
+
+        if (action === 'search_jobs') {
+          const query =
+            typeof body.query === 'string' && body.query.trim()
+              ? body.query.trim().slice(0, 200)
+              : 'yacht deckhand';
+          const page =
+            typeof body.page === 'number' || typeof body.page === 'string'
+              ? String(Math.max(1, Math.min(20, Number(body.page) || 1)))
+              : '1';
+          const country = typeof body.country === 'string' ? body.country.trim().slice(0, 10) : '';
+          const datePosted =
+            typeof body.date_posted === 'string' && body.date_posted.trim()
+              ? body.date_posted.trim().slice(0, 20)
+              : 'all';
+
+          const result = await callJsearchMega(
+            '/search',
+            {
+              query,
+              page,
+              date_posted: datePosted,
+              ...(country ? { country } : {}),
             },
-            body: JSON.stringify(body),
-            signal: AbortSignal.timeout(18000),
-          });
-          const edgeData = await edgeRes.json().catch(() => ({ error: 'Job search proxy failed.' }));
-          return reply(edgeRes.status, edgeData);
-        }
-
-        const query =
-          typeof body.query === 'string' && body.query.trim()
-            ? body.query.trim().slice(0, 200)
-            : 'yacht deckhand';
-        const country = typeof body.country === 'string' ? body.country.trim().slice(0, 10) : '';
-        const datePosted =
-          typeof body.date_posted === 'string' && body.date_posted.trim()
-            ? body.date_posted.trim().slice(0, 20)
-            : 'all';
-
-        const upstreamUrl = new URL('https://jsearch.p.rapidapi.com/search-v2');
-        upstreamUrl.searchParams.set('query', query);
-        upstreamUrl.searchParams.set('num_pages', '1');
-        upstreamUrl.searchParams.set('date_posted', datePosted);
-        if (country) upstreamUrl.searchParams.set('country', country);
-
-        const upstream = await fetch(upstreamUrl.toString(), {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-rapidapi-host': jsearchHost,
-            'x-rapidapi-key': jsearchKey,
-          },
-          signal: AbortSignal.timeout(15000),
-          redirect: 'error',
-        });
-
-        if (!upstream.ok) {
-          throw new SafeError(
-            upstream.status === 429 ? 429 : 502,
-            `Job search provider returned HTTP ${upstream.status}.`
+            jsearchHost,
+            jsearchKey
           );
+
+          // Normalize array vs nested jobs array across JSearch versions
+          const normalizedData = Array.isArray(result?.data)
+            ? result.data
+            : Array.isArray(result?.data?.jobs)
+              ? result.data.jobs
+              : [];
+
+          return reply(200, { ...result, data: normalizedData });
         }
 
-        const result = await upstream.json();
-        return reply(200, result);
+        if (action === 'job_details') {
+          const jobId = typeof body.job_id === 'string' ? body.job_id.trim().slice(0, 600) : '';
+          if (!jobId) return reply(400, { error: 'job_id is required.' });
+          const country =
+            typeof body.country === 'string' && body.country.trim()
+              ? body.country.trim().slice(0, 10)
+              : 'us';
+
+          const result = await callJsearchMega(
+            '/job-details',
+            { job_id: jobId, country },
+            jsearchHost,
+            jsearchKey
+          );
+          return reply(200, result);
+        }
+
+        if (action === 'company_job_salary') {
+          const company = typeof body.company === 'string' ? body.company.trim().slice(0, 160) : '';
+          const jobTitle =
+            typeof body.job_title === 'string' ? body.job_title.trim().slice(0, 160) : '';
+          if (!company || !jobTitle) {
+            return reply(400, { error: 'Both company and job_title are required.' });
+          }
+          const locationType =
+            typeof body.location_type === 'string' && body.location_type.trim()
+              ? body.location_type.trim().slice(0, 30)
+              : 'ANY';
+          const yearsOfExperience =
+            typeof body.years_of_experience === 'string' && body.years_of_experience.trim()
+              ? body.years_of_experience.trim().slice(0, 30)
+              : 'ALL';
+
+          const result = await callJsearchMega(
+            '/company-job-salary',
+            {
+              company,
+              job_title: jobTitle,
+              location_type: locationType,
+              years_of_experience: yearsOfExperience,
+            },
+            jsearchHost,
+            jsearchKey
+          );
+          return reply(200, result);
+        }
+
+        if (action === 'estimated_salary') {
+          const jobTitle =
+            typeof body.job_title === 'string' ? body.job_title.trim().slice(0, 160) : '';
+          const location =
+            typeof body.location === 'string' ? body.location.trim().slice(0, 160) : '';
+          if (!jobTitle || !location) {
+            return reply(400, { error: 'Both job_title and location are required.' });
+          }
+          const locationType =
+            typeof body.location_type === 'string' && body.location_type.trim()
+              ? body.location_type.trim().slice(0, 30)
+              : 'ANY';
+          const yearsOfExperience =
+            typeof body.years_of_experience === 'string' && body.years_of_experience.trim()
+              ? body.years_of_experience.trim().slice(0, 30)
+              : 'ALL';
+
+          const result = await callJsearchMega(
+            '/estimated-salary',
+            {
+              job_title: jobTitle,
+              location,
+              location_type: locationType,
+              years_of_experience: yearsOfExperience,
+            },
+            jsearchHost,
+            jsearchKey
+          );
+          return reply(200, result);
+        }
       }
 
       if (action === 'employer_contacts') {
         const outscraperKey = process.env.OUTSCRAPER_API_KEY?.trim();
         if (!outscraperKey) {
-          const edgeRes = await fetch(edgeProxyUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-              apikey: anon,
-            },
-            body: JSON.stringify(body),
-            signal: AbortSignal.timeout(18000),
-          });
-          const edgeData = await edgeRes.json().catch(() => ({ error: 'Employer contacts proxy failed.' }));
-          return reply(edgeRes.status, edgeData);
+          return forwardToEdgeProxy(token, anon, body);
         }
 
         const rawDomain = typeof body.domain === 'string' ? body.domain.trim() : '';
@@ -207,10 +318,15 @@ export default {
         return reply(200, result);
       }
 
-      return reply(400, { error: 'Invalid action. Supported actions: search_jobs, employer_contacts.' });
-    } catch (e) {
-      if (e instanceof SafeError) return reply(e.status, { error: e.message });
-      return reply(502, { error: 'The search proxy request failed or timed out. Please retry.' });
+      return reply(400, {
+        error:
+          "Unsupported action. Use 'search_jobs', 'job_details', 'company_job_salary', 'estimated_salary', or 'employer_contacts'.",
+      });
+    } catch (error) {
+      if (error instanceof SafeError) {
+        return reply(error.status, { error: error.message });
+      }
+      return reply(502, { error: 'The job search request failed. Please try again.' });
     }
   },
 };

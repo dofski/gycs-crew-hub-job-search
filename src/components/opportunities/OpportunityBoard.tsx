@@ -8,7 +8,6 @@ import {
   Briefcase,
   ExternalLink,
   ShieldCheck,
-  CheckCircle,
   MapPin,
   Clock,
   Filter,
@@ -16,7 +15,11 @@ import {
   Search,
   Globe,
   Building2,
-  Loader2
+  Loader2,
+  DollarSign,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import type { Opportunity } from '../../types/database.ts';
 
@@ -24,6 +27,14 @@ interface OpportunityBoardProps {
   opportunities: Opportunity[];
   onSaveToApplications: (opp: Opportunity) => void;
   accessToken?: string;
+}
+
+interface LiveJobItem extends Opportunity {
+  rawJobId?: string;
+  countryCode?: string;
+  fullDescription?: string;
+  highlights?: Record<string, string[]>;
+  applyOptions?: Array<{ publisher?: string; apply_link?: string; is_direct?: boolean }>;
 }
 
 export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
@@ -34,14 +45,29 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
   const [filterDept, setFilterDept] = useState<'all' | 'deck' | 'interior' | 'engineering' | 'galley'>('all');
   const [filterContract, setFilterContract] = useState<'all' | 'seasonal' | 'permanent' | 'daywork' | 'rotational'>('all');
 
-  // Live Authenticated Job Search state (/api/job-search -> JSearch)
+  // Live Authenticated Job Search state (/api/job-search -> JSearch Mega /search)
   const [searchQuery, setSearchQuery] = useState('yacht deckhand');
   const [searchCountry, setSearchCountry] = useState('');
   const [datePosted, setDatePosted] = useState('all');
+  const [searchPage, setSearchPage] = useState(1);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const [liveResults, setLiveResults] = useState<Opportunity[]>([]);
+  const [liveResults, setLiveResults] = useState<LiveJobItem[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+
+  // Full Job Details state (/api/job-search -> JSearch Mega /job-details)
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+  const [loadingJobId, setLoadingJobId] = useState<string | null>(null);
+  const [jobDetailsById, setJobDetailsById] = useState<Record<string, any>>({});
+
+  // Salary Benchmark state (/api/job-search -> JSearch Mega /estimated-salary & /company-job-salary)
+  const [salaryMode, setSalaryMode] = useState<'estimated' | 'company'>('estimated');
+  const [salaryJobTitle, setSalaryJobTitle] = useState('marine engineer');
+  const [salaryLocation, setSalaryLocation] = useState('United States');
+  const [salaryCompany, setSalaryCompany] = useState('Carnival');
+  const [loadingSalary, setLoadingSalary] = useState(false);
+  const [salaryError, setSalaryError] = useState('');
+  const [salaryResults, setSalaryResults] = useState<any[] | null>(null);
 
   // Employer Domain Contact Lookup state (/api/job-search -> Outscraper)
   const [domainQuery, setDomainQuery] = useState('');
@@ -83,8 +109,7 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
     return edgeData;
   }
 
-  const handleLiveSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const executeLiveSearch = async (pageToLoad: number) => {
     setSearching(true);
     setSearchError('');
     setHasSearched(true);
@@ -92,39 +117,121 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
       const res = await callJobSearchProxy({
         action: 'search_jobs',
         query: searchQuery.trim() || 'yacht crew',
+        page: pageToLoad,
         country: searchCountry.trim(),
         date_posted: datePosted,
       });
-      const rawJobs: any[] = Array.isArray(res?.data) ? res.data : [];
-      const mapped: Opportunity[] = rawJobs.map((j: any, i: number) => {
+      const rawJobs: any[] = Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.data?.jobs)
+          ? res.data.jobs
+          : [];
+      const mapped: LiveJobItem[] = rawJobs.map((j: any, i: number) => {
         const titleLower = String(j.job_title || '').toLowerCase();
-        const dept = titleLower.includes('steward') || titleLower.includes('interior')
-          ? 'interior'
-          : titleLower.includes('engineer')
-            ? 'engineering'
-            : titleLower.includes('chef') || titleLower.includes('cook') || titleLower.includes('galley')
-              ? 'galley'
-              : 'deck';
+        const dept =
+          titleLower.includes('steward') || titleLower.includes('interior')
+            ? 'interior'
+            : titleLower.includes('engineer') || titleLower.includes('eto')
+              ? 'engineering'
+              : titleLower.includes('chef') || titleLower.includes('cook') || titleLower.includes('galley')
+                ? 'galley'
+                : 'deck';
+        const fullDesc = String(j.job_description || '');
         return {
-          id: String(j.job_id || `live-${i}`),
+          id: String(j.job_id || `live-${pageToLoad}-${i}`),
+          rawJobId: j.job_id ? String(j.job_id) : undefined,
+          countryCode: String(j.job_country || searchCountry || 'us').toLowerCase(),
           title: String(j.job_title || 'Yacht Crew Vacancy'),
           department: dept,
           employerName: String(j.employer_name || 'External Employer'),
           location: [j.job_city, j.job_state, j.job_country].filter(Boolean).join(', ') || 'International',
           vesselType: String(j.job_publisher || 'External Job Listing'),
-          contractType: String(j.job_employment_type || '').toLowerCase().includes('part') ? 'seasonal' : 'permanent',
-          description: String(j.job_description || '').slice(0, 360) + (String(j.job_description || '').length > 360 ? '…' : ''),
+          contractType: String(j.job_employment_type || '').toLowerCase().includes('part')
+            ? 'seasonal'
+            : 'permanent',
+          description: fullDesc.slice(0, 360) + (fullDesc.length > 360 ? '…' : ''),
+          fullDescription: fullDesc,
+          highlights: j.job_highlights && typeof j.job_highlights === 'object' ? j.job_highlights : undefined,
+          applyOptions: Array.isArray(j.apply_options) ? j.apply_options : undefined,
           externalUrl: String(j.job_apply_link || j.job_google_link || ''),
           source: 'partner',
           isVerifiedEmployer: false,
-          postedDate: j.job_posted_at_datetime_utc ? String(j.job_posted_at_datetime_utc).slice(0, 10) : 'Recent',
+          postedDate: j.job_posted_at_datetime_utc
+            ? String(j.job_posted_at_datetime_utc).slice(0, 10)
+            : j.job_posted_at
+              ? String(j.job_posted_at)
+              : 'Recent',
         };
       });
       setLiveResults(mapped);
+      setSearchPage(pageToLoad);
     } catch (err: any) {
       setSearchError(err?.message || 'Live job search failed.');
     } finally {
       setSearching(false);
+    }
+  };
+
+  const handleLiveSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await executeLiveSearch(1);
+  };
+
+  const handleInspectJobDetails = async (opp: LiveJobItem) => {
+    if (expandedJobId === opp.id) {
+      setExpandedJobId(null);
+      return;
+    }
+    setExpandedJobId(opp.id);
+    if (!opp.rawJobId || jobDetailsById[opp.id]) return;
+
+    setLoadingJobId(opp.id);
+    try {
+      const res = await callJobSearchProxy({
+        action: 'job_details',
+        job_id: opp.rawJobId,
+        country: opp.countryCode || searchCountry || 'us',
+      });
+      const detailItem = Array.isArray(res?.data) ? res.data[0] : res?.data;
+      if (detailItem) {
+        setJobDetailsById((prev) => ({ ...prev, [opp.id]: detailItem }));
+      }
+    } catch {
+      // Fallback to already-fetched search payload fields
+    } finally {
+      setLoadingJobId(null);
+    }
+  };
+
+  const handleSalaryLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoadingSalary(true);
+    setSalaryError('');
+    setSalaryResults(null);
+    try {
+      const payload =
+        salaryMode === 'estimated'
+          ? {
+              action: 'estimated_salary',
+              job_title: salaryJobTitle.trim(),
+              location: salaryLocation.trim(),
+              location_type: 'ANY',
+              years_of_experience: 'ALL',
+            }
+          : {
+              action: 'company_job_salary',
+              company: salaryCompany.trim(),
+              job_title: salaryJobTitle.trim(),
+              location_type: 'ANY',
+              years_of_experience: 'ALL',
+            };
+      const res = await callJobSearchProxy(payload);
+      const list = Array.isArray(res?.data) ? res.data : [];
+      setSalaryResults(list);
+    } catch (err: any) {
+      setSalaryError(err?.message || 'Salary benchmark lookup failed.');
+    } finally {
+      setLoadingSalary(false);
     }
   };
 
@@ -148,6 +255,20 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
     }
   };
 
+  const formatMoney = (val: unknown, currency = 'USD') => {
+    const num = Number(val);
+    if (!Number.isFinite(num) || num <= 0) return '—';
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency || 'USD',
+        maximumFractionDigits: 0,
+      }).format(num);
+    } catch {
+      return `${currency} ${Math.round(num).toLocaleString()}`;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Banner */}
@@ -155,13 +276,13 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 mb-1">
             <ShieldCheck className="w-4 h-4" />
-            <span>Direct Partner Submissions & Outbound Listings</span>
+            <span>Direct Partner Submissions &amp; Outbound Listings</span>
           </div>
           <h2 className="text-xl font-bold text-white font-['Space_Grotesk']">
             Curated Yacht Crew Opportunities
           </h2>
           <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            Strictly authorized employer submissions and direct links. GYCS does not scrape job boards or charge crew placement fees (SA ESA s.15 & MLC compliant).
+            Strictly authorized employer submissions and direct links. GYCS does not charge crew placement fees (SA ESA s.15 &amp; MLC compliant).
           </p>
         </div>
 
@@ -172,13 +293,13 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
         </div>
       </div>
 
-      {/* Live Authenticated Job Search & Employer Contact Lookup */}
+      {/* Live Authenticated Job Search (JSearch Mega) */}
       <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
               <Globe className="w-4 h-4" />
-              <span>Authenticated Live Job Search (JSearch) &amp; Agency Contact Lookup</span>
+              <span>Authenticated Live Job Search (JSearch Mega API) &amp; Agency Contact Lookup</span>
             </div>
             <h3 className="text-base font-bold text-white mt-0.5">
               Search Real-Time Maritime &amp; Yacht Crew Vacancies
@@ -248,56 +369,295 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
         )}
 
         {hasSearched && !searching && !searchError && liveResults.length === 0 && (
-          <p className="text-xs text-slate-400">No live external listings matched that query. Try a broader term such as "yacht" or "deckhand".</p>
+          <p className="text-xs text-slate-400">
+            No live external listings matched that query. Try a broader term such as &quot;yacht&quot; or &quot;deckhand&quot;.
+          </p>
         )}
 
         {liveResults.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {liveResults.map((opp) => (
-              <div
-                key={opp.id}
-                className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                      Live Search · {opp.department}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">{opp.postedDate}</span>
-                  </div>
-                  <h4 className="text-sm font-bold text-white">{opp.title}</h4>
-                  <p className="text-xs text-emerald-400 font-medium mt-0.5">
-                    {opp.employerName} · {opp.location}
-                  </p>
-                  <p className="text-xs text-slate-300 mt-2 leading-relaxed">{opp.description}</p>
-                </div>
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
-                  {opp.externalUrl ? (
-                    <a
-                      href={opp.externalUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-slate-300 hover:text-white flex items-center gap-1 underline"
-                    >
-                      <span>View Source Listing</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  ) : (
-                    <span className="text-xs text-slate-500">Direct listing</span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => onSaveToApplications({ ...opp, id: '' })}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    <span>Save to Applications</span>
-                  </button>
-                </div>
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span>
+                Showing {liveResults.length} results (Page {searchPage})
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={searching || searchPage <= 1}
+                  onClick={() => void executeLiveSearch(searchPage - 1)}
+                  className="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 border border-slate-800 rounded-lg text-slate-200 flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  Prev
+                </button>
+                <button
+                  type="button"
+                  disabled={searching}
+                  onClick={() => void executeLiveSearch(searchPage + 1)}
+                  className="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 disabled:opacity-40 border border-slate-800 rounded-lg text-slate-200 flex items-center gap-1"
+                >
+                  Next
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-            ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {liveResults.map((opp) => {
+                const detail = jobDetailsById[opp.id];
+                const isExpanded = expandedJobId === opp.id;
+                const isLoadingDetail = loadingJobId === opp.id;
+                const fullText = detail?.job_description || opp.fullDescription || opp.description;
+                const highlights: Record<string, string[]> | undefined =
+                  detail?.job_highlights || opp.highlights;
+                const applyOptions: Array<{ publisher?: string; apply_link?: string }> =
+                  detail?.apply_options || opp.applyOptions || [];
+
+                return (
+                  <div
+                    key={opp.id}
+                    className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                          Live Search · {opp.department}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">{opp.postedDate}</span>
+                      </div>
+                      <h4 className="text-sm font-bold text-white">{opp.title}</h4>
+                      <p className="text-xs text-emerald-400 font-medium mt-0.5">
+                        {opp.employerName} · {opp.location}
+                      </p>
+                      <p className="text-xs text-slate-300 mt-2 leading-relaxed whitespace-pre-line">
+                        {isExpanded ? fullText : opp.description}
+                      </p>
+
+                      {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-2 text-xs">
+                          {isLoadingDetail && (
+                            <p className="text-slate-400 flex items-center gap-1.5">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                              Fetching extended job details…
+                            </p>
+                          )}
+                          {highlights &&
+                            Object.entries(highlights).map(([sectionName, bullets]) =>
+                              Array.isArray(bullets) && bullets.length > 0 ? (
+                                <div key={sectionName}>
+                                  <span className="font-bold text-slate-200 block mb-1">
+                                    {sectionName}:
+                                  </span>
+                                  <ul className="list-disc list-inside text-slate-300 space-y-0.5">
+                                    {bullets.slice(0, 6).map((b, idx) => (
+                                      <li key={idx}>{b}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ) : null
+                            )}
+                          {applyOptions.length > 1 && (
+                            <div>
+                              <span className="font-bold text-slate-200 block mb-1">
+                                Apply Channels:
+                              </span>
+                              <div className="flex flex-wrap gap-2">
+                                {applyOptions.map((opt, idx) =>
+                                  opt.apply_link ? (
+                                    <a
+                                      key={idx}
+                                      href={opt.apply_link}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-[11px] text-emerald-300 hover:text-white flex items-center gap-1"
+                                    >
+                                      <span>{opt.publisher || 'Publisher'}</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  ) : null
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => void handleInspectJobDetails(opp)}
+                          className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium"
+                        >
+                          <FileText className="w-3 h-3" />
+                          <span>{isExpanded ? 'Hide Details' : 'Full Job Details'}</span>
+                        </button>
+
+                        {opp.externalUrl ? (
+                          <a
+                            href={opp.externalUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-slate-300 hover:text-white flex items-center gap-1 underline"
+                          >
+                            <span>View Source Listing</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          <span className="text-xs text-slate-500">Direct listing</span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => onSaveToApplications({ ...opp, id: '' })}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>Save to Applications</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
+
+        {/* Maritime & Crew Salary Benchmark (JSearch Mega /estimated-salary & /company-job-salary) */}
+        <div className="pt-4 border-t border-slate-800 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+              <DollarSign className="w-3.5 h-3.5" />
+              <span>Maritime &amp; Employer Salary Benchmark (JSearch Mega)</span>
+            </div>
+            <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setSalaryMode('estimated')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition ${
+                  salaryMode === 'estimated'
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                By Role &amp; Location
+              </button>
+              <button
+                type="button"
+                onClick={() => setSalaryMode('company')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition ${
+                  salaryMode === 'company'
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                By Company &amp; Role
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleSalaryLookup} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            {salaryMode === 'company' && (
+              <div className="sm:col-span-4">
+                <label className="block text-[11px] text-slate-400 mb-1">Company / Fleet Name</label>
+                <input
+                  type="text"
+                  value={salaryCompany}
+                  onChange={(e) => setSalaryCompany(e.target.value)}
+                  placeholder="e.g. Carnival, Royal Caribbean, Hornblower"
+                  className="w-full bg-slate-950 border border-slate-700 text-xs text-slate-100 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+            )}
+            <div className={salaryMode === 'company' ? 'sm:col-span-5' : 'sm:col-span-5'}>
+              <label className="block text-[11px] text-slate-400 mb-1">Job Title</label>
+              <input
+                type="text"
+                value={salaryJobTitle}
+                onChange={(e) => setSalaryJobTitle(e.target.value)}
+                placeholder="e.g. marine engineer, deckhand, captain, chef"
+                className="w-full bg-slate-950 border border-slate-700 text-xs text-slate-100 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+            </div>
+            {salaryMode === 'estimated' && (
+              <div className="sm:col-span-4">
+                <label className="block text-[11px] text-slate-400 mb-1">Location / Region</label>
+                <input
+                  type="text"
+                  value={salaryLocation}
+                  onChange={(e) => setSalaryLocation(e.target.value)}
+                  placeholder="e.g. Florida, United States, Antibes"
+                  className="w-full bg-slate-950 border border-slate-700 text-xs text-slate-100 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+            )}
+            <div className="sm:col-span-3">
+              <button
+                type="submit"
+                disabled={loadingSalary}
+                className="w-full py-2 px-4 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-100 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5"
+              >
+                {loadingSalary ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <DollarSign className="w-3.5 h-3.5 text-emerald-400" />}
+                <span>{loadingSalary ? 'Checking…' : 'Check Salary Range'}</span>
+              </button>
+            </div>
+          </form>
+
+          {salaryError && <p className="text-xs text-rose-300">{salaryError}</p>}
+
+          {salaryResults && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {salaryResults.length === 0 ? (
+                <p className="text-xs text-slate-400 col-span-2">
+                  No published salary benchmark returned for that combination. Try a broader maritime title or region.
+                </p>
+              ) : (
+                salaryResults.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-xs space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-white">
+                        {item.job_title || salaryJobTitle}{' '}
+                        {item.company ? `· ${item.company}` : ''}
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-400 uppercase">
+                        {item.salary_period || 'YEAR'} ({item.salary_currency || 'USD'})
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-[11px]">
+                      Location: {item.location || salaryLocation}
+                      {item.publisher_name ? ` · Source: ${item.publisher_name}` : ''}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      <div className="p-2 bg-slate-900 rounded-lg border border-slate-800">
+                        <span className="text-[10px] text-slate-400 block">Min</span>
+                        <span className="font-bold text-slate-200 font-mono">
+                          {formatMoney(item.min_salary, item.salary_currency)}
+                        </span>
+                      </div>
+                      <div className="p-2 bg-emerald-950/30 rounded-lg border border-emerald-500/30">
+                        <span className="text-[10px] text-emerald-300 block">Median</span>
+                        <span className="font-bold text-emerald-400 font-mono">
+                          {formatMoney(item.median_salary, item.salary_currency)}
+                        </span>
+                      </div>
+                      <div className="p-2 bg-slate-900 rounded-lg border border-slate-800">
+                        <span className="text-[10px] text-slate-400 block">Max</span>
+                        <span className="font-bold text-slate-200 font-mono">
+                          {formatMoney(item.max_salary, item.salary_currency)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Employer Contact Lookup */}
         <form onSubmit={handleDomainLookup} className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row gap-3 items-end">
@@ -382,11 +742,13 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
             >
               <div>
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
-                    opp.contractType === 'daywork'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                  }`}>
+                  <span
+                    className={`px-2.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
+                      opp.contractType === 'daywork'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    }`}
+                  >
                     {opp.contractType}
                   </span>
 

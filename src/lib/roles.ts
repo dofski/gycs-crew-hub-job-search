@@ -25,6 +25,8 @@ export interface CoachingProgrammeOption {
   title: string;
   shortLabel: string;
   eyebrow: string;
+  deliveryFramework: string;
+  instructor: string;
   summary: string;
   highlights: string[];
 }
@@ -33,31 +35,35 @@ export const COACHING_PROGRAMMES: Record<CoachingProgrammeType, CoachingProgramm
   one_on_one: {
     id: 'one_on_one',
     slug: 'single-1on1-coaching',
-    title: 'Single 1-on-1 Coaching Program',
+    title: 'Single 1-on-1 Coaching Program (8-Week Launchpad)',
     shortLabel: '1-on-1 Coaching',
-    eyebrow: 'PRIVATE 1-ON-1 MENTORSHIP',
+    eyebrow: 'PRIVATE 1-ON-1 GROW MENTORSHIP',
+    deliveryFramework: 'The GROW Coaching Model (Goal, Reality, Obstacles, Way Forward)',
+    instructor: 'Chad de Wet (Yachtmaster Offshore 200GT, Enterprise AI/API Architect)',
     summary:
-      'Direct, personalised 1-on-1 career coaching with Chad de Wet tailored to your exact starting point, timeline, and chosen pathway.',
+      'Private, 1-on-1 execution of the 8-Week Superyacht Career Launchpad with Chad de Wet—tailored to your baseline constraints, target department pathway, CV Studio assets, and M/Y Eye outreach.',
     highlights: [
-      'Private 1-on-1 strategy calls and tailored pathway roadmap',
-      'Direct review and positioning of your yacht CV and experience',
-      'Personalised training, certification, and budget prioritisation',
-      'Individual search routine, M/Y Eye port planning, and coach check-ins',
+      'Phase 1 KNOW (Weeks 1–2): Private ENG1/Visa/Runway audit & Essential vs. Upsell training route',
+      'Phase 2 PREPARE (Weeks 3–5): 1-on-1 CV Studio (<250KB) build, Candidate Conversion Funnel & Deployment Vault',
+      'Phase 3 EXECUTE (Weeks 6–8): Direct M/Y Eye AIS vessel outreach, 1-on-1 mock Captain/HOD interviews & SEA contract review',
+      'Direct access to GYCS Crew Hub, CV Studio, M/Y Eye, Candidate Funnel & CRM Opportunity Pipeline',
     ],
   },
   group: {
     id: 'group',
     slug: 'group-coaching-program',
-    title: 'Group Coaching Program',
+    title: 'Group Coaching Program (8-Week Superyacht Career Launchpad)',
     shortLabel: 'Group Coaching',
-    eyebrow: 'STRUCTURED COHORT PROGRAMME',
+    eyebrow: '8-WEEK GROW COHORT LAUNCHPAD',
+    deliveryFramework: 'The GROW Coaching Model (Goal, Reality, Obstacles, Way Forward)',
+    instructor: 'Chad de Wet (Yachtmaster Offshore 200GT, Enterprise AI/API Architect)',
     summary:
-      'Structured 8-week cohort coaching combining weekly live strategy sessions, step-by-step career modules, and shared milestone accountability.',
+      'Structured 8-Week Superyacht Career Launchpad cohort coaching across Phase 1: KNOW (Weeks 1–2), Phase 2: PREPARE (Weeks 3–5), and Phase 3: EXECUTE (Weeks 6–8) with weekly live strategy rooms.',
     highlights: [
-      '8-week structured curriculum from Career Reality Check to Action Blueprint',
-      'Weekly live group coaching and interactive Q&A strategy rooms',
-      'Pathway-matched milestones (Deckhand, Steward/ess, Engineer, Chef)',
-      'Full Crew Hub workspace access, CV Studio, and M/Y Eye search tools',
+      'Phase 1 KNOW (Weeks 1–2): Career Reality Check & Route/Training Navigator (zero wasted capital)',
+      'Phase 2 PREPARE (Weeks 3–5): Experience-to-CV Builder (<250KB), Candidate Funnel & Launch Readiness Planner',
+      'Phase 3 EXECUTE (Weeks 6–8): M/Y Eye Job Search Strategist, Interview Confidence Lab & 30-Day Action Blueprint',
+      'Weekly live cohort coaching rooms, pathway-matched milestones (Deck, Interior, Eng, Galley) & CRM Pipeline',
     ],
   },
 };
@@ -68,41 +74,64 @@ export const PATHWAY_ROLE_OPTIONS: Array<{
   label: string;
   pathwayTitle: string;
   description: string;
+  mandatoryTickets: string[];
+  functionalAdditions: string[];
+  progressionRoute: string;
 }> = [
   {
     role: 'deckhand',
     department: 'deck',
     label: 'Deckhand',
     pathwayTitle: 'Deck / Deckhand Pathway',
-    description: 'Exterior maintenance, tender driving (PB2), line handling, washdowns, and bridge/lookout support.',
+    description:
+      'Translating trades (carpentry, detailing, watersports, mechanics) into entry-level deckhand assets; tender operations, washdowns, line handling, and officer progression routes (PB2 to OOW 3000GT).',
+    mandatoryTickets: ['ENG1 Seafarer Medical', 'STCW 2010 Basic Safety Training', 'PDSD (Security Duties)'],
+    functionalAdditions: ['RYA Powerboat Level 2 (PB2)', 'Marine VHF Short Range Certificate (SRC)', 'Tender Operator'],
+    progressionRoute: 'Deckhand → Lead Deckhand → Bosun → Officer of the Watch (OOW 3000GT) → Chief Officer / Master',
   },
   {
     role: 'steward',
     department: 'interior',
     label: 'Steward / Stewardess',
     pathwayTitle: 'Interior / Steward(ess) Pathway',
-    description: 'Luxury guest hospitality, silver/table service, housekeeping, laundry, and interior detailing.',
+    description:
+      'Translating fine dining, boutique hospitality, private households, and mixology into junior steward/ess roles; silver service, cabin detailing, laundry systems, and Chief Stewardess operational expectations.',
+    mandatoryTickets: ['ENG1 Seafarer Medical', 'STCW 2010 Basic Safety Training', 'PDSD (Security Duties)'],
+    functionalAdditions: ['Food Safety & Hygiene Level 2 (MLC Reg 3.2)', 'WSET Wine / Mixology & Barista Skills'],
+    progressionRoute: 'Junior Steward/ess → 2nd Steward/ess → Chief Steward/ess → Purser / Interior Manager',
   },
   {
     role: 'engineer',
     department: 'engineering',
     label: 'Engineer',
-    pathwayTitle: 'Engineering Pathway',
-    description: 'Marine propulsion, AEC 1 & 2 foundations, onboard mechanical/electrical systems, and watchkeeping.',
+    pathwayTitle: 'Engineering & ETO Pathway',
+    description:
+      'Positioning commercial mechanics, ETOs, and technical trades for rotational salaries; highlighting vessel tonnage, generator capacities, preventative maintenance, and AEC 1 & 2 foundations.',
+    mandatoryTickets: ['ENG1 Seafarer Medical', 'STCW 2010 Basic Safety Training', 'PDSD (Security Duties)'],
+    functionalAdditions: ['MCA Approved Engine Course (AEC 1 & AEC 2)', 'High Voltage / Marine Electrical & AV/IT'],
+    progressionRoute: 'Deck/Engineer → Junior Engineer (AEC) → MEOL → Chief Engineer (Y4 / Y3 / Y2 / Y1)',
   },
   {
     role: 'chef',
     department: 'galley',
     label: 'Chef',
-    pathwayTitle: 'Galley / Chef Pathway',
-    description: 'Crew and guest provisioning, menu planning, maritime food hygiene (MLC Reg 3.2), and galley operations.',
+    pathwayTitle: 'Galley / Superyacht Chef Pathway',
+    description:
+      'Positioning culinary professionals for rotational and charter salaries; highlighting guest/crew provisioning metrics, dietary matrices, allergen compliance, and MLC Reg 3.2 maritime food hygiene.',
+    mandatoryTickets: ['ENG1 Seafarer Medical', 'STCW 2010 Basic Safety Training', 'PDSD (Security Duties)'],
+    functionalAdditions: ['Food Safety & Hygiene Level 2 / 3 (MLC Reg 3.2)', 'Ship’s Cook Assessment / Provisioning Logistics'],
+    progressionRoute: 'Crew Chef / Sous Chef → Sole Yacht Chef → Head Charter Chef (50m–100m+)',
   },
   {
     role: 'member',
     department: 'undecided',
     label: 'Exploring / Undecided',
-    pathwayTitle: 'Discovery Pathway (Help Me Decide)',
-    description: 'Evaluate your transferable skills and goals with your coach before locking in a department role.',
+    pathwayTitle: 'Discovery Pathway (Week 1–2 Route Navigator)',
+    description:
+      'Audit your baseline constraints in Week 1 (Career Reality Check) and evaluate your transferable skills in Week 2 (Route & Training Navigator) before locking in your department.',
+    mandatoryTickets: ['ENG1 Seafarer Medical Audit', 'Passport & Visa Baseline Check'],
+    functionalAdditions: ['GYCS Baseline Constraints & Runway Calculator', 'Department Route Selector'],
+    progressionRoute: 'Phase 1 KNOW (Weeks 1–2) → Lock Deck, Interior, Engineering, or Galley Pathway',
   },
 ];
 

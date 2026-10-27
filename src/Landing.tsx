@@ -7,6 +7,12 @@ import {
   PATHWAY_ROLE_OPTIONS,
   type CoachingProgrammeType,
 } from './lib/roles';
+import {
+  LAUNCHPAD_COURSE_METADATA,
+  LAUNCHPAD_INFRASTRUCTURE,
+  LAUNCHPAD_PHASES,
+  LAUNCHPAD_WEEKS,
+} from './lib/launchpad-syllabus';
 import {trackBookCallEvent, trackStartApplicationEvent} from './lib/analytics';
 
 type Stage = [string, string];
@@ -330,6 +336,82 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="gy-section" id="launchpad-syllabus" aria-labelledby="launchpad-syllabus-title">
+        <p className="gy-eyebrow">8-WEEK SUPERYACHT CAREER LAUNCHPAD · GROW COACHING SYLLABUS</p>
+        <h2 id="launchpad-syllabus-title">{LAUNCHPAD_COURSE_METADATA.title}</h2>
+        <p className="gy-lead">
+          <strong>Instructor / Systems Architect:</strong> {LAUNCHPAD_COURSE_METADATA.instructor} ·{' '}
+          <strong>Delivery Framework:</strong> {LAUNCHPAD_COURSE_METADATA.deliveryFramework}
+        </p>
+
+        <div className="gy-grid gy-grid-3" style={{marginBottom: '24px'}}>
+          {LAUNCHPAD_PHASES.map(phase => (
+            <article className="gy-card" key={phase.code}>
+              <p className="gy-eyebrow">
+                {phase.phase} · {phase.weeks}
+              </p>
+              <h3>{phase.bullets.join(' · ')}</h3>
+              <p>{phase.subtitle}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="gy-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px'}}>
+          {LAUNCHPAD_WEEKS.map(week => (
+            <article className="gy-card" key={week.week} style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
+              <div>
+                <p className="gy-eyebrow">
+                  WEEK 0{week.week} · {week.phase}
+                </p>
+                <h3>{week.title}</h3>
+                <p className="gy-small" style={{marginBottom: '8px'}}>
+                  <strong>GROW Anchor:</strong> {week.growAnchor} · <strong>Core Tool:</strong> {week.platformTool}
+                </p>
+                <p>{week.coreObjective}</p>
+                <ul className="gy-ticks">
+                  {week.operationalLessons.map(group => (
+                    <li key={group.title}>
+                      <strong>{group.title}:</strong> {group.points[0]}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div style={{marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(148,163,184,0.2)'}}>
+                <p className="gy-small">
+                  <strong>Deliverable:</strong> {week.primaryOutput}
+                </p>
+                <p className="gy-small">
+                  <strong>Milestone:</strong> {week.weeklyMilestone}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="gy-card" style={{marginTop: '24px'}}>
+          <p className="gy-eyebrow">COURSE TOOLING &amp; TECHNICAL INFRASTRUCTURE</p>
+          <h3>Integrated 5-Pillar Superyacht Career Stack</h3>
+          <div className="gy-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '12px'}}>
+            {LAUNCHPAD_INFRASTRUCTURE.map(tool => (
+              <div key={tool.number}>
+                <h4>
+                  0{tool.number}. {tool.name}
+                </h4>
+                <p className="gy-small">{tool.description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="gy-actions" style={{marginTop: '18px'}}>
+            <a className="gy-primary" href="/?workspace=1">
+              Open 8-Week Course in Crew Hub →
+            </a>
+            <button className="gy-outline" onClick={() => book('syllabus_section')}>
+              Book a Strategy Call ↓
+            </button>
+          </div>
         </div>
       </section>
 

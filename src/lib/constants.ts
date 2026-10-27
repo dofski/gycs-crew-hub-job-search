@@ -120,6 +120,10 @@ export interface Milestone {
   sortOrder: number;
   evidenceRequired: string;
   status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'deferred' | 'not_applicable';
+  phase?: string;
+  growAnchor?: string;
+  platformTool?: string;
+  primaryOutput?: string;
   approvedBy?: string;
   approvedAt?: string;
   notes?: string;
@@ -309,18 +313,63 @@ export const SOURCED_REQUIREMENTS: Requirement[] = [
     verifiedBy: 'Chad de Wet',
   },
   {
+    id: 'req-aec-1-2',
+    code: 'MCA_AEC_1_2',
+    title: 'MCA Approved Engine Course (AEC 1 & AEC 2)',
+    description: 'Entry-level marine engineering qualification covering marine diesel propulsion, generators, electrical systems, and auxiliary machinery.',
+    classification: 'employer_preference',
+    applicableFlags: ['MCA', 'Cayman Islands', 'Marshall Islands'],
+    applicableRoles: ['Junior Engineer', 'Deck/Engineer'],
+    applicableDepartments: ['engineering', 'deck'],
+    sourceAuthority: 'UK Maritime & Coastguard Agency (MCA)',
+    sourceVersion: 'MIN 642 (M) AEC Syllabus',
+    lastVerifiedDate: '2026-10-27',
+    verifiedBy: 'Chad de Wet',
+    notes: 'Essential for commercial mechanics and ETOs transitioning into superyacht engineering rotational roles.',
+  },
+  {
+    id: 'req-visa-schengen-b1b2',
+    code: 'VISA_SCHENGEN_B1B2',
+    title: 'Schengen 90/180-Day & US B1/B2 / C1/D Visa Compliance',
+    description: 'Passport validity (>18 months recommended) and visa readiness for Mediterranean (Schengen) and North American/Caribbean (B1/B2) deployment.',
+    classification: 'required_for_context',
+    applicableFlags: ['All Foreign-Flagged Commercial & Private Yachts'],
+    applicableRoles: ['All Crew'],
+    applicableDepartments: ['deck', 'interior', 'engineering', 'galley'],
+    sourceAuthority: 'EU Schengen Borders Code / US Department of State',
+    sourceVersion: '2026 Consular Guidance',
+    lastVerifiedDate: '2026-10-27',
+    verifiedBy: 'Chad de Wet',
+    notes: 'Audited in Week 1 Career Reality Check: non-EU crew must manage the Schengen 90/180-day clock; US-flagged vessels require US citizenship/Green Card.',
+  },
+  {
+    id: 'req-mlc-sea',
+    code: 'MLC_SEA_CONTRACT',
+    title: 'MLC 2006 Seafarer Employment Agreement (SEA) Compliance',
+    description: 'Standard Maritime Labour Convention contract audit covering basic pay, leave ratio (38–60+ days/year), repatriation, and medical coverage.',
+    classification: 'required_for_context',
+    applicableFlags: ['MLC 2006 Signatory Flag States'],
+    applicableRoles: ['All Crew'],
+    applicableDepartments: ['deck', 'interior', 'engineering', 'galley'],
+    sourceAuthority: 'ILO Maritime Labour Convention 2006',
+    sourceVersion: 'Standard A2.1',
+    lastVerifiedDate: '2026-10-27',
+    verifiedBy: 'Chad de Wet',
+    notes: 'Audited in Week 8 Career Action Blueprint before signing any permanent or seasonal yacht contract.',
+  },
+  {
     id: 'req-yachtmaster-offshore',
     code: 'RYA_YACHTMASTER_OFFSHORE',
-    title: 'RYA Yachtmaster Offshore (Theory & Practical)',
-    description: 'Advanced skipper credential for seasoned crew.',
+    title: 'RYA Yachtmaster Offshore 200GT / OOW 3000GT Route',
+    description: 'Advanced watchkeeping and command qualification for experienced deck crew progressing toward Officer of the Watch.',
     classification: 'defer',
     applicableFlags: ['MCA'],
     applicableRoles: ['Lead Deckhand', 'Bosun', 'Officer'],
     applicableDepartments: ['deck'],
     sourceAuthority: 'RYA / MCA',
     sourceVersion: 'Current',
-    lastVerifiedDate: '2026-09-01',
+    lastVerifiedDate: '2026-10-27',
     verifiedBy: 'Chad de Wet',
-    notes: 'DO NOT spend R40,000+ on this before getting your first contract! Defer until sea time is logged.',
+    notes: 'DO NOT spend capital on advanced tickets before your first contract. Defer until qualifying sea time is logged.',
   },
 ];

@@ -7,11 +7,15 @@ import { DocumentVault } from './components/documents/DocumentVault.tsx';
 import { LearningHub } from './components/learn/LearningHub.tsx';
 import { LiveRoom } from './components/live/LiveRoom.tsx';
 import { OpportunityBoard } from './components/opportunities/OpportunityBoard.tsx';
+import { MilestoneTimeline } from './components/pathway/MilestoneTimeline.tsx';
 import { CrewMapLocationSettings } from './components/settings/CrewMapLocationSettings.tsx';
 import { ProfileEditor } from './components/settings/ProfileEditor.tsx';
+import { SOURCED_REQUIREMENTS, type Department, type Milestone, type ReadinessDimension, type Requirement } from './lib/constants.ts';
+import { LAUNCHPAD_INFRASTRUCTURE, LAUNCHPAD_PHASES, PORT_RUNWAY_BENCHMARKS } from './lib/launchpad-syllabus.ts';
 import { ThemeSwitcher } from './lib/theme.tsx';
 import {
   COACHING_PROGRAMMES,
+  PATHWAY_ROLE_OPTIONS,
   formatCoachingProgrammeLabel,
   formatUserRoleLabel,
   isStaffRole,
@@ -323,6 +327,11 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
+  const [selectedPortId, setSelectedPortId] = useState<string>('antibes');
+  const [runwaySavingsEur, setRunwaySavingsEur] = useState<number>(3500);
+  const [eng1Status, setEng1Status] = useState<string>('Valid / Booked');
+  const [visaStatus, setVisaStatus] = useState<string>('Schengen 90/180 & B1/B2 Audited');
+  const [cabinReady, setCabinReady] = useState<boolean>(true);
   const lock = useRef(false),
     sequence = useRef(0),
     mounted = useRef(true);
@@ -360,6 +369,7 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
         .select('*,milestones(*)')
         .eq('user_id', userId)
         .order('version', { ascending: false }),
+      requirements: db!.from('requirements').select('*').eq('is_active', true).order('code'),
       programmes: db!.from('programmes').select('*').eq('is_active', true).order('created_at'),
       cohorts: db!.from('cohorts').select('*').eq('is_active', true),
       lessons: db!
@@ -455,6 +465,124 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
     );
   const p = data.profile,
     cv = data.cvs[0];
+  const activePathway = data.pathways?.[0];
+  const activeMilestones: Milestone[] = ((activePathway?.milestones || []) as Row[])
+    .slice()
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    .map((m: Row) => ({
+      id: m.id,
+      pathwayId: m.pathway_id,
+      requirementId: m.requirement_id || undefined,
+      title: m.title,
+      description: m.description || '',
+      sortOrder: m.sort_order || 1,
+      evidenceRequired: m.evidence_required || 'Completion evidence',
+      status: m.status || 'pending',
+      phase: m.phase || undefined,
+      growAnchor: m.grow_anchor || undefined,
+      platformTool: m.platform_tool || undefined,
+      primaryOutput: m.primary_output || undefined,
+      notes: m.notes || undefined,
+    }));
+  const mappedRequirements: Requirement[] =
+    data.requirements && data.requirements.length > 0
+      ? data.requirements.map((r: Row) => ({
+          id: r.id,
+          code: r.code,
+          title: r.title,
+          description: r.description || '',
+          classification: r.classification || 'required_for_context',
+          applicableFlags: Array.isArray(r.applicable_flags) ? r.applicable_flags : ['MCA', 'SAMSA'],
+          applicableRoles: Array.isArray(r.applicable_roles) ? r.applicable_roles : ['All Crew'],
+          applicableDepartments: (Array.isArray(r.applicable_departments)
+            ? r.applicable_departments
+            : ['deck', 'interior', 'engineering', 'galley']) as Department[],
+          sourceAuthority: r.source_authority || 'IMO STCW / Flag State',
+          sourceUrl: r.source_url || undefined,
+          sourceVersion: r.source_version || 'Current',
+          lastVerifiedDate: r.last_verified_date ? String(r.last_verified_date).slice(0, 10) : '2026-10-27',
+          verifiedBy: r.verified_by_name || 'Chad de Wet',
+          notes: r.notes || undefined,
+        }))
+      : SOURCED_REQUIREMENTS;
+
+  const trainingDocs = (data.documents || []).filter((d: Row) => d.category === 'training' || d.category === 'qualification');
+  const medicalDocs = (data.documents || []).filter((d: Row) => d.category === 'medical');
+  const identityDocs = (data.documents || []).filter((d: Row) => d.category === 'identity' || d.category === 'travel');
+  const completedLessonsCount = (data.progress || []).filter((pr: Row) => pr.completed).length;
+  const approvedMilestonesCount = activeMilestones.filter(m => m.status === 'approved' || m.status === 'submitted').length;
+  const readinessDimensions: ReadinessDimension[] = [
+    {
+      key: 'training',
+      label: '1. Training Qualifications',
+      level: trainingDocs.some((d: Row) => d.verification_status === 'verified')
+        ? 'verified'
+        : trainingDocs.length > 0
+          ? 'in_progress'
+          : 'not_started',
+      measuredBy: 'STCW 2010 BST + PDSD + Department Tickets',
+      sourceOfTruth: `Documents Vault (${trainingDocs.length} record${trainingDocs.length === 1 ? '' : 's'})`,
+    },
+    {
+      key: 'medical',
+      label: '2. Medical Clearance',
+      level: medicalDocs.some((d: Row) => d.verification_status === 'verified')
+        ? 'verified'
+        : medicalDocs.length > 0
+          ? 'in_progress'
+          : 'not_started',
+      measuredBy: 'Valid ENG1 or Flag-State Equivalent',
+      sourceOfTruth: `Medical Records (${medicalDocs.length} record${medicalDocs.length === 1 ? '' : 's'})`,
+    },
+    {
+      key: 'profile',
+      label: '3. Professional Profile & CV',
+      level: cv ? 'submitted' : 'not_started',
+      measuredBy: '2-Page Compliant Maritime CV (<250KB)',
+      sourceOfTruth: cv ? `CV Studio v${cv.version}` : 'CV Studio',
+    },
+    {
+      key: 'practical_skills',
+      label: '4. 8-Week Launchpad Modules',
+      level:
+        completedLessonsCount >= 6
+          ? 'coach_approved'
+          : completedLessonsCount > 0 || approvedMilestonesCount > 0
+            ? 'in_progress'
+            : 'not_started',
+      measuredBy: 'Phase 1 (KNOW), Phase 2 (PREPARE), Phase 3 (EXECUTE)',
+      sourceOfTruth: `${completedLessonsCount}/${(data.lessons || []).length || 8} Weeks Completed · ${approvedMilestonesCount}/${activeMilestones.length || 8} Milestones`,
+    },
+    {
+      key: 'travel_work',
+      label: '5. Travel & Visa Permissions',
+      level: identityDocs.some((d: Row) => d.verification_status === 'verified')
+        ? 'verified'
+        : identityDocs.length > 0
+          ? 'in_progress'
+          : 'not_started',
+      measuredBy: 'Passport (>18m), Schengen 90/180 & US B1/B2',
+      sourceOfTruth: `Identity/Travel Vault (${identityDocs.length} record${identityDocs.length === 1 ? '' : 's'})`,
+    },
+    {
+      key: 'search_prep',
+      label: '6. M/Y Eye & CRM Outreach Pipeline',
+      level: (data.applications || []).length >= 5 ? 'coach_approved' : (data.applications || []).length > 0 ? 'in_progress' : 'not_started',
+      measuredBy: 'Agency Matrix + Direct Vessel AIS Outreach',
+      sourceOfTruth: `${(data.applications || []).length} Tracked Applications`,
+    },
+    {
+      key: 'employment_outcome',
+      label: '7. Verified Employment Outcome',
+      level: (data.outcomes || []).length > 0 ? 'verified' : 'not_started',
+      measuredBy: 'MLC-Compliant SEA Contract / Daywork Start',
+      sourceOfTruth: (data.outcomes || []).length > 0 ? 'Verified Start Recorded' : 'Outcomes Registry',
+    },
+  ];
+  const selectedPort = PORT_RUNWAY_BENCHMARKS.find(b => b.id === selectedPortId) || PORT_RUNWAY_BENCHMARKS[0];
+  const monthlyPortBurnEur = selectedPort.crewHouseNightlyEur * 30 + selectedPort.monthlyFoodTransportEur;
+  const estimatedRunwayMonths = monthlyPortBurnEur > 0 ? +(runwaySavingsEur / monthlyPortBurnEur).toFixed(1) : 0;
+  const estimatedRunwayWeeks = monthlyPortBurnEur > 0 ? Math.round((runwaySavingsEur / monthlyPortBurnEur) * 4.33) : 0;
   const opportunities: Opportunity[] = data.opportunities
     .filter((o: Row) => o.employers?.is_verified)
     .map((o: Row) => ({
@@ -560,40 +688,241 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
       {busy && <p role="status">Waiting for Supabase...</p>}
       <fieldset disabled={busy} className="min-w-0 space-y-5">
         {tab === 'today' && (
-          <Panel title="Your career workspace">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
-                <p className="text-xs text-slate-400">Pathway User Role</p>
-                <p className="text-sm font-bold text-emerald-400">
-                  {formatUserRoleLabel(p.role)} <span className="text-xs font-mono text-slate-400">({p.role})</span>
-                </p>
+          <div className="space-y-5">
+            <Panel title="Your career workspace · 8-Week Superyacht Career Launchpad">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <p className="text-xs text-slate-400">Pathway User Role</p>
+                  <p className="text-sm font-bold text-emerald-400">
+                    {formatUserRoleLabel(p.role)} <span className="text-xs font-mono text-slate-400">({p.role})</span>
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <p className="text-xs text-slate-400">Coaching Program</p>
+                  <p className="text-sm font-bold text-amber-300">
+                    {formatCoachingProgrammeLabel(p.coaching_programme)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <p className="text-xs text-slate-400">Journey Stage</p>
+                  <p className="text-sm font-bold text-sky-300">{p.journey_state || 'exploring'}</p>
+                </div>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
-                <p className="text-xs text-slate-400">Coaching Program</p>
-                <p className="text-sm font-bold text-amber-300">
-                  {formatCoachingProgrammeLabel(p.coaching_programme)}
-                </p>
+              <p className="text-sm text-slate-300">
+                {data.documents.length} documents · {data.applications.length} applications · {data.assessments.length}{' '}
+                assessments · {data.pathways.length} pathway versions · {completedLessonsCount}/{(data.lessons || []).length || 8} syllabus weeks completed
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button type="button" onClick={() => setTab('learn')} className={buttonClass}>
+                  Open 8-Week Launchpad Course
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTab('pathway')}
+                  className="rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:border-emerald-500"
+                >
+                  My Pathway &amp; Milestones ({approvedMilestonesCount}/{activeMilestones.length || 8})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTab('programs')}
+                  className="rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:border-emerald-500"
+                >
+                  Switch Coaching Program / Pathway
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTab('cv')}
+                  className="rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:border-emerald-500"
+                >
+                  CV Studio (&lt;250KB)
+                </button>
               </div>
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
-                <p className="text-xs text-slate-400">Journey Stage</p>
-                <p className="text-sm font-bold text-sky-300">{p.journey_state || 'exploring'}</p>
-              </div>
-            </div>
-            <p>
-              {data.documents.length} documents · {data.applications.length} applications · {data.assessments.length}{' '}
-              assessments · {data.pathways.length} pathway versions
-            </p>
-            <Empty>
-              This workspace shows database records only. An empty section means no records have been created or made
-              available to your account. Coaching does not guarantee employment.
-            </Empty>
-            {!p.organisation_id && (
               <Empty>
-                Your account is not yet assigned to a coaching organisation. Your personal records remain available;
-                cohort access requires enrolment by your programme administrator.
+                This workspace shows database records only. An empty section means no records have been created or made
+                available to your account. Coaching does not guarantee employment.
               </Empty>
-            )}
-          </Panel>
+              {!p.organisation_id && (
+                <Empty>
+                  Your account is not yet assigned to a coaching organisation. Your personal records remain available;
+                  cohort access requires enrolment by your programme administrator.
+                </Empty>
+              )}
+            </Panel>
+
+            {/* 7-Dimension Readiness Scorecard (Web + Android Parity) */}
+            <Panel title="7-Dimension Maritime Readiness Scorecard">
+              <p className="text-xs text-slate-400">
+                Synchronized across Web and Android from your live Supabase records (Documents Vault, CV Studio, 8-Week Launchpad Progress, Pathway Milestones, and CRM Pipeline).
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {readinessDimensions.map(dim => (
+                  <div key={dim.key} className="rounded-xl border border-slate-800 bg-slate-950 p-3.5 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-white">{dim.label}</span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                          dim.level === 'verified' || dim.level === 'coach_approved'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : dim.level === 'submitted' || dim.level === 'in_progress'
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {dim.level.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300">{dim.measuredBy}</p>
+                    <p className="text-[10px] font-mono text-teal-400">{dim.sourceOfTruth}</p>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            {/* Week 1 Tech & Digital Deliverable: GYCS Baseline Constraints & Financial Runway Calculator */}
+            <Panel title="Week 1 Deliverable: GYCS Baseline Constraints & Financial Runway Calculator">
+              <p className="text-xs text-slate-300">
+                <strong>Phase 1: KNOW (Week 1 — Career Reality Check)</strong> · Model your crew house living costs across Antibes, Palma, Fort Lauderdale, and St. Maarten and verify your baseline medical &amp; visa constraints before investing capital.
+              </p>
+              <div className="grid gap-4 md:grid-cols-4">
+                <label className="block text-xs">
+                  Target Launch Port Hub
+                  <select
+                    value={selectedPortId}
+                    onChange={e => setSelectedPortId(e.target.value)}
+                    className={`${inputClass} mt-1`}
+                  >
+                    {PORT_RUNWAY_BENCHMARKS.map(port => (
+                      <option key={port.id} value={port.id}>
+                        {port.port}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs">
+                  Available Launch Savings (€ EUR)
+                  <input
+                    type="number"
+                    min={500}
+                    max={50000}
+                    step={100}
+                    value={runwaySavingsEur}
+                    onChange={e => setRunwaySavingsEur(Number(e.target.value) || 0)}
+                    className={`${inputClass} mt-1`}
+                  />
+                </label>
+                <label className="block text-xs">
+                  ENG1 Seafarer Medical Status
+                  <select
+                    value={eng1Status}
+                    onChange={e => setEng1Status(e.target.value)}
+                    className={`${inputClass} mt-1`}
+                  >
+                    <option value="Valid / Booked">Valid ENG1 / MCA Doctor Booked</option>
+                    <option value="SAMSA Medical Held">SAMSA Medical Held (Confirming Flag)</option>
+                    <option value="Needs Booking">Not Yet Booked (Action Required)</option>
+                  </select>
+                </label>
+                <label className="block text-xs">
+                  Flag State &amp; Visa Baseline
+                  <select
+                    value={visaStatus}
+                    onChange={e => setVisaStatus(e.target.value)}
+                    className={`${inputClass} mt-1`}
+                  >
+                    <option value="Schengen 90/180 & B1/B2 Audited">Schengen 90/180 &amp; B1/B2 Audited</option>
+                    <option value="EU / Visa-Exempt Passport">EU / UK / Visa-Exempt Passport</option>
+                    <option value="Visa Application Required">Schengen / B1/B2 Application Needed</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-4 pt-2">
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <span className="text-[11px] text-slate-400">Crew House + Living Burn</span>
+                  <p className="text-base font-bold text-white mt-0.5">€{monthlyPortBurnEur}/mo</p>
+                  <span className="text-[10px] text-slate-400">
+                    €{selectedPort.crewHouseNightlyEur}/night crew house + €{selectedPort.monthlyFoodTransportEur} food/local
+                  </span>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <span className="text-[11px] text-slate-400">Calculated Port Runway</span>
+                  <p
+                    className={`text-base font-bold mt-0.5 ${
+                      estimatedRunwayWeeks >= selectedPort.recommendedRunwayWeeks ? 'text-emerald-400' : 'text-amber-300'
+                    }`}
+                  >
+                    {estimatedRunwayWeeks} weeks ({estimatedRunwayMonths} mos)
+                  </p>
+                  <span className="text-[10px] text-slate-400">
+                    Recommended minimum: {selectedPort.recommendedRunwayWeeks} weeks
+                  </span>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+                  <span className="text-[11px] text-slate-400">Peak Hiring Window</span>
+                  <p className="text-xs font-semibold text-teal-300 mt-1">{selectedPort.peakSeason}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 flex flex-col justify-between">
+                  <label className="flex items-start gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cabinReady}
+                      onChange={e => setCabinReady(e.target.checked)}
+                      className="mt-0.5"
+                    />
+                    <span>Shared cabin, zero-tolerance &amp; 14–16h charter shift readiness confirmed</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
+                <p className="text-xs text-slate-400">{selectedPort.notes}</p>
+                <button
+                  type="button"
+                  className={buttonClass}
+                  onClick={() => {
+                    const week1Lesson = (data.lessons || []).find((l: Row) => l.sort_order === 1) || data.lessons?.[0];
+                    if (!week1Lesson) return;
+                    const summary = `Week 1 Baseline Constraints & Financial Runway Audit: Port=${selectedPort.port} (€${monthlyPortBurnEur}/mo burn, €${runwaySavingsEur} savings = ${estimatedRunwayWeeks} weeks / ${estimatedRunwayMonths} months runway) | ENG1=${eng1Status} | Visa=${visaStatus} | Shared Cabin Readiness=${cabinReady ? 'Confirmed' : 'Pending'}`;
+                    void run(async () => {
+                      const assign = (data.assignments || []).find((a: Row) => a.lesson_id === week1Lesson.id);
+                      const cohortId = data.cohorts?.[0]?.id;
+                      if (assign && cohortId) {
+                        const existingSub = (data.submissions || []).find((s: Row) => s.assignment_id === assign.id);
+                        if (existingSub) {
+                          await checked(
+                            db!
+                              .from('assignment_submissions')
+                              .update({ content: summary, status: 'submitted', submitted_at: new Date().toISOString() })
+                              .eq('id', existingSub.id)
+                              .eq('user_id', userId)
+                              .select('id')
+                              .single()
+                          );
+                        } else {
+                          await checked(
+                            db!
+                              .from('assignment_submissions')
+                              .insert({
+                                assignment_id: assign.id,
+                                user_id: userId,
+                                cohort_id: cohortId,
+                                content: summary,
+                                status: 'submitted',
+                              })
+                              .select('id')
+                              .single()
+                          );
+                        }
+                      }
+                    }, 'Week 1 Baseline Constraints & Financial Runway Audit saved to your Week 1 deliverable.');
+                  }}
+                >
+                  Save &amp; Submit Week 1 Runway Audit
+                </button>
+              </div>
+            </Panel>
+          </div>
         )}
         {tab === 'profile' && (
           <ProfileEditor
@@ -609,71 +938,139 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
           />
         )}
         {tab === 'programs' && (
-          <Panel title="GYCS Coaching Programs & Pathway Role">
-            <p className="text-sm text-slate-300">
-              Choose between our <strong>Single 1-on-1 Coaching Program</strong> and{' '}
-              <strong>Group Coaching Program</strong>. Your user role automatically matches your selected pathway.
-            </p>
-            <div className="grid gap-4 md:grid-cols-2">
-              {Object.values(COACHING_PROGRAMMES).map(prog => {
-                const isSelected = p.coaching_programme === prog.id;
-                return (
-                  <article
-                    key={prog.id}
-                    className={`rounded-xl border p-4 space-y-3 ${
-                      isSelected ? 'border-emerald-500 bg-emerald-950/20' : 'border-slate-800 bg-slate-950'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-mono uppercase text-emerald-400">{prog.eyebrow}</span>
-                      {isSelected && (
-                        <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
-                          Selected Program
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-base font-bold text-white">{prog.title}</h3>
-                    <p className="text-xs text-slate-300">{prog.summary}</p>
-                    <ul className="space-y-1 text-xs text-slate-400">
-                      {prog.highlights.map(h => (
-                        <li key={h}>• {h}</li>
-                      ))}
-                    </ul>
-                    <button
-                      type="button"
-                      className={buttonClass}
-                      onClick={() =>
-                        void run(
-                          () =>
-                            checked(
-                              db!.rpc('gycs_sync_member_pathway_role', {
-                                p_department: data.map_card?.department || data.onboarding_intake?.payload?.department || 'deck',
-                                p_pathway_selection: p.pathway_selection || p.role,
-                                p_coaching_programme: prog.id,
-                              })
-                            ),
-                          `Coaching program updated to ${prog.title}.`
-                        )
-                      }
+          <div className="space-y-5">
+            <Panel title="GYCS Coaching Programs · 8-Week Superyacht Career Launchpad">
+              <p className="text-sm text-slate-300">
+                Choose between our <strong>Single 1-on-1 Coaching Program</strong> and{' '}
+                <strong>Group Coaching Program</strong>. Both programs deliver the{' '}
+                <strong>8-Week Superyacht Career Launchpad</strong> using the <strong>GROW Coaching Model</strong> (Goal, Reality, Obstacles, Way Forward).
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
+                {Object.values(COACHING_PROGRAMMES).map(prog => {
+                  const isSelected = p.coaching_programme === prog.id;
+                  return (
+                    <article
+                      key={prog.id}
+                      className={`rounded-xl border p-4 space-y-3 ${
+                        isSelected ? 'border-emerald-500 bg-emerald-950/20' : 'border-slate-800 bg-slate-950'
+                      }`}
                     >
-                      {isSelected ? `Active: ${prog.shortLabel}` : `Select ${prog.shortLabel}`}
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
-            {data.programmes?.length > 0 && (
-              <div className="border-t border-slate-800 pt-4 space-y-2">
-                <h3 className="text-sm font-bold text-slate-200">Active Database Programmes</h3>
-                {data.programmes.map((pr: Row) => (
-                  <p key={pr.id} className="text-xs text-slate-300">
-                    <strong>{pr.title}</strong> ({pr.programme_type || pr.slug}) — {pr.duration_weeks || 8} weeks ·{' '}
-                    {pr.description}
-                  </p>
-                ))}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-mono uppercase text-emerald-400">{prog.eyebrow}</span>
+                        {isSelected && (
+                          <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
+                            Selected Program
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base font-bold text-white">{prog.title}</h3>
+                      <p className="text-[11px] font-medium text-teal-300">
+                        Instructor: {prog.instructor}
+                      </p>
+                      <p className="text-xs text-slate-300">{prog.summary}</p>
+                      <ul className="space-y-1 text-xs text-slate-400">
+                        {prog.highlights.map(h => (
+                          <li key={h}>• {h}</li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        className={buttonClass}
+                        onClick={() =>
+                          void run(
+                            () =>
+                              checked(
+                                db!.rpc('gycs_sync_member_pathway_role', {
+                                  p_department: data.map_card?.department || data.onboarding_intake?.payload?.department || 'deck',
+                                  p_pathway_selection: p.pathway_selection || p.role,
+                                  p_coaching_programme: prog.id,
+                                })
+                              ),
+                            `Coaching program updated to ${prog.title} and 8-Week Launchpad pathway synced.`
+                          )
+                        }
+                      >
+                        {isSelected ? `Active: ${prog.shortLabel}` : `Select ${prog.shortLabel}`}
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
-            )}
-          </Panel>
+              {data.programmes?.length > 0 && (
+                <div className="border-t border-slate-800 pt-4 space-y-2">
+                  <h3 className="text-sm font-bold text-slate-200">Active Database Programmes</h3>
+                  {data.programmes.map((pr: Row) => (
+                    <p key={pr.id} className="text-xs text-slate-300">
+                      <strong>{pr.title}</strong> ({pr.programme_type || pr.slug}) — {pr.duration_weeks || 8} weeks ·{' '}
+                      {pr.description}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </Panel>
+
+            <Panel title="Department Pathways & Tonnage Specializations (Week 2 Route Navigator)">
+              <p className="text-xs text-slate-300">
+                Select your target vessel department to synchronize your user role, mandatory vs. functional training route, and 8-Week Launchpad milestones across Web and Android.
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
+                {PATHWAY_ROLE_OPTIONS.map(opt => {
+                  const isActiveRole = p.role === opt.role;
+                  return (
+                    <article
+                      key={opt.role}
+                      className={`rounded-xl border p-4 space-y-2.5 ${
+                        isActiveRole ? 'border-teal-500 bg-teal-950/20' : 'border-slate-800 bg-slate-950'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-mono uppercase text-teal-400">
+                          {opt.department.toUpperCase()} DEPARTMENT · ROLE: {opt.role}
+                        </span>
+                        {isActiveRole && (
+                          <span className="rounded-full bg-teal-500/20 px-2.5 py-0.5 text-xs font-semibold text-teal-300">
+                            Active Pathway
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base font-bold text-white">{opt.pathwayTitle}</h3>
+                      <p className="text-xs text-slate-300">{opt.description}</p>
+                      <div className="text-[11px] text-slate-400 space-y-1 pt-1">
+                        <p>
+                          <strong className="text-slate-200">Mandatory Tickets:</strong> {opt.mandatoryTickets.join(' · ')}
+                        </p>
+                        <p>
+                          <strong className="text-slate-200">Functional Additions:</strong> {opt.functionalAdditions.join(' · ')}
+                        </p>
+                        <p>
+                          <strong className="text-emerald-300">Progression Route:</strong> {opt.progressionRoute}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className={buttonClass}
+                        onClick={() =>
+                          void run(
+                            () =>
+                              checked(
+                                db!.rpc('gycs_sync_member_pathway_role', {
+                                  p_department: opt.department === 'undecided' ? 'deck' : opt.department,
+                                  p_pathway_selection: opt.role,
+                                  p_coaching_programme: p.coaching_programme || 'group',
+                                })
+                              ),
+                            `Pathway updated to ${opt.pathwayTitle} and 8-Week Launchpad milestones synced.`
+                          )
+                        }
+                      >
+                        {isActiveRole ? `Active: ${opt.label}` : `Select ${opt.pathwayTitle}`}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            </Panel>
+          </div>
         )}
         {tab === 'location' && (
           <CrewMapLocationSettings
@@ -755,33 +1152,43 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
           </Panel>
         )}
         {tab === 'pathway' && (
-          <Panel title="Agreed pathways">
-            <p className="text-xs text-slate-400">
-              Current Pathway Role: <strong className="text-emerald-400">{formatUserRoleLabel(p.role)}</strong> ·
-              Program: <strong className="text-amber-300">{formatCoachingProgrammeLabel(p.coaching_programme)}</strong>
-            </p>
-            {!data.pathways.length && (
-              <Empty>No pathway has been assigned yet. Saving an intake does not automatically approve a pathway.</Empty>
-            )}
-            {data.pathways.map((v: Row) => (
-              <article key={v.id} className="space-y-2 border-t border-slate-800 pt-3">
-                <h3 className="font-bold text-emerald-300">
-                  {v.target_role} ({v.department}) · version {v.version}
-                </h3>
-                <p className="text-sm text-slate-300">{v.summary}</p>
-                <ul className="space-y-2 text-sm">
-                  {(v.milestones || [])
-                    .sort((a: Row, b: Row) => a.sort_order - b.sort_order)
-                    .map((m: Row) => (
-                      <li key={m.id} className="rounded-lg border border-slate-800 bg-slate-950 p-3">
-                        <strong>{m.title}</strong> — <span className="font-mono text-xs text-emerald-400">{m.status}</span>
-                        {m.description && <p className="text-xs text-slate-400 mt-1">{m.description}</p>}
-                      </li>
-                    ))}
-                </ul>
-              </article>
-            ))}
-          </Panel>
+          <MilestoneTimeline
+            milestones={activeMilestones}
+            requirements={mappedRequirements}
+            department={((activePathway?.department || data.map_card?.department || 'deck') as Department)}
+            targetRole={activePathway?.target_role || formatUserRoleLabel(p.role)}
+            pathwaySummary={activePathway?.summary || undefined}
+            coachingProgrammeLabel={formatCoachingProgrammeLabel(p.coaching_programme)}
+            isCoachMode={isStaffRole(p.role)}
+            syncingPathway={busy}
+            onSyncLaunchpadPathway={() =>
+              void run(
+                () =>
+                  checked(
+                    db!.rpc('gycs_sync_member_pathway_role', {
+                      p_department: activePathway?.department || data.map_card?.department || 'deck',
+                      p_pathway_selection: p.pathway_selection || p.role,
+                      p_coaching_programme: p.coaching_programme || 'group',
+                    })
+                  ),
+                '8-Week Superyacht Career Launchpad pathway and milestones synchronized.'
+              )
+            }
+            onUpdateMilestoneStatus={(milestoneId, status) =>
+              void run(
+                () =>
+                  checked(
+                    db!
+                      .from('milestones')
+                      .update({ status })
+                      .eq('id', milestoneId)
+                      .select('id')
+                      .single()
+                  ),
+                `Milestone updated to "${status.replace('_', ' ')}".`
+              )
+            }
+          />
         )}
         {tab === 'cv' && (
           <CVStudio
@@ -1019,6 +1426,7 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
         )}
         {tab === 'learn' && (
           <LearningHub
+            userId={userId}
             lessons={data.lessons.map((l: Row, idx: number) => {
               const prog = data.progress.find((v: Row) => v.lesson_id === l.id);
               const assign = (data.assignments || []).find((a: Row) => a.lesson_id === l.id);
@@ -1031,9 +1439,20 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
                 week: l.sort_order || idx + 1,
                 title: l.title,
                 type: l.lesson_type || 'video',
-                durationMins: l.duration_mins || 15,
+                durationMins: l.duration_mins || 45,
                 completed: Boolean(prog?.completed),
                 content: l.content || '',
+                phase: l.phase || undefined,
+                phaseCode: l.phase_code || undefined,
+                moduleFocus: l.module_focus || undefined,
+                growAnchor: l.grow_anchor || undefined,
+                coreObjective: l.core_objective || undefined,
+                platformTool: l.platform_tool || undefined,
+                operationalLessons: Array.isArray(l.operational_lessons) ? l.operational_lessons : undefined,
+                techDeliverable: l.tech_deliverable || undefined,
+                weeklyMilestone: l.weekly_milestone || undefined,
+                primaryOutput: l.primary_output || undefined,
+                deckUrl: l.deck_url || undefined,
                 videoUrl: l.gumlet_embed_url || l.video_url || undefined,
                 gumletAssetId: l.gumlet_asset_id || undefined,
                 gumletPlaylistId: l.gumlet_playlist_id || undefined,
@@ -1053,6 +1472,41 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
                   : undefined,
               };
             })}
+            liveSessions={data.sessions.map((s: Row) => ({
+              id: s.id,
+              cohortName: data.cohorts?.[0]?.name || 'GYCS Coaching Cohort',
+              title: s.title,
+              scheduledAt: s.scheduled_at,
+              durationMins: s.duration_mins || 60,
+              coachName: 'Chad de Wet',
+              meetingUrl:
+                s.gumlet_embed_url ||
+                s.meeting_url ||
+                'https://play.gumlet.io/embed/live/6adec989e655cfbd8127b254',
+              recordingUrl: s.recording_url || undefined,
+              recordingConsentRequired: Boolean(s.recording_consent_required ?? true),
+              questions: data.questions
+                .filter((q: Row) => q.session_id === s.id)
+                .map((q: Row) => ({
+                  id: q.id,
+                  user: q.user_id === userId ? p.display_name : 'Cohort Member',
+                  text: q.question,
+                  answered: Boolean(q.answered),
+                })),
+            }))}
+            onAskQuestion={(sessionId, question) => {
+              void run(
+                () =>
+                  checked(
+                    db!
+                      .from('session_questions')
+                      .insert({ user_id: userId, session_id: sessionId, question: question.trim() })
+                      .select('id')
+                      .single()
+                  ),
+                'Question added to the live coaching queue.'
+              );
+            }}
             onToggleLessonComplete={lessonId => {
               const progress = data.progress.find((v: Row) => v.lesson_id === lessonId);
               const completed = !progress?.completed;

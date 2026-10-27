@@ -141,6 +141,17 @@ export interface LessonItem {
   durationMins: number;
   completed: boolean;
   content: string;
+  phase?: string;
+  phaseCode?: 'know' | 'prepare' | 'execute';
+  moduleFocus?: string;
+  growAnchor?: string;
+  coreObjective?: string;
+  platformTool?: string;
+  operationalLessons?: Array<{ title: string; points: string[] }>;
+  techDeliverable?: string;
+  weeklyMilestone?: string;
+  primaryOutput?: string;
+  deckUrl?: string;
   videoUrl?: string;
   gumletAssetId?: string;
   gumletPlaylistId?: string;

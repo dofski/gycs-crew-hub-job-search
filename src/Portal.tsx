@@ -497,6 +497,9 @@ export default function Portal() {
           <button disabled={busy} onClick={() => jumpToLandingSection('coaching-programs')}>
             Programs
           </button>
+          <button disabled={busy} onClick={() => jumpToLandingSection('launchpad-syllabus')}>
+            8-Week Syllabus
+          </button>
           <button disabled={busy} onClick={() => jumpToLandingSection('pathways')}>
             Pathways
           </button>

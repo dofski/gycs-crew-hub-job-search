@@ -24,6 +24,7 @@ import {
   RefreshCw,
   LayoutTemplate,
   FileSearch,
+  ExternalLink,
 } from 'lucide-react';
 import type {
   CVData,
@@ -382,6 +383,17 @@ export const CVStudio: React.FC<CVStudioProps> = ({ cvData, busy = false, onSave
             <Upload className="w-3.5 h-3.5 text-emerald-400" />
             {exportBusy === 'import' ? 'Importing...' : 'Import PDF / JSON / LinkedIn'}
           </button>
+
+          <a
+            href="https://gycs-crew-cv.vercel.app"
+            target="_blank"
+            rel="noreferrer"
+            className="px-3 py-2 bg-slate-950 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+            title="Open the standalone GYCS Crew CV application (export JSON here to transfer your CV)"
+          >
+            <span>Standalone CV App</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
 
           <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex flex-wrap items-center gap-1">
             <button

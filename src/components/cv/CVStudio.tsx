@@ -385,7 +385,7 @@ export const CVStudio: React.FC<CVStudioProps> = ({ cvData, busy = false, onSave
           </button>
 
           <a
-            href="https://gycs-crew-cv.vercel.app"
+            href="https://cv.chaddewet.com"
             target="_blank"
             rel="noreferrer"
             className="px-3 py-2 bg-slate-950 hover:bg-slate-800 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"

@@ -6,6 +6,7 @@ import { CVStudio } from './components/cv/CVStudio.tsx';
 import { DocumentVault } from './components/documents/DocumentVault.tsx';
 import { LearningHub } from './components/learn/LearningHub.tsx';
 import { LiveRoom } from './components/live/LiveRoom.tsx';
+import { SuperadminLiveController } from './components/live/SuperadminLiveController.tsx';
 import { OpportunityBoard } from './components/opportunities/OpportunityBoard.tsx';
 import { MilestoneTimeline } from './components/pathway/MilestoneTimeline.tsx';
 import { CrewMapLocationSettings } from './components/settings/CrewMapLocationSettings.tsx';
@@ -1793,7 +1794,61 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
           </Panel>
         )}
         {tab === 'superadmin' && isStaffRole(p.role) && (
-          <Panel title="Superadmin & User Role / Pathway Management">
+          <div className="space-y-6">
+            <SuperadminLiveController
+              accessToken={session.access_token}
+              userEmail={p.email}
+              userRole={p.role}
+              sessions={(data.sessions || []).map((s: Row) => ({
+                id: s.id,
+                title: s.title,
+                scheduled_at: s.scheduled_at,
+                meeting_url: s.meeting_url,
+                gumlet_embed_url: s.gumlet_embed_url,
+                gumlet_live_asset_id: s.gumlet_live_asset_id,
+              }))}
+              onBindSessionStream={(sessionId, liveAssetId, embedUrl) => {
+                void run(
+                  () =>
+                    checked(
+                      db!
+                        .from('live_sessions')
+                        .update({
+                          gumlet_live_asset_id: liveAssetId,
+                          gumlet_embed_url: embedUrl,
+                          meeting_url: embedUrl,
+                        })
+                        .eq('id', sessionId)
+                        .select('id')
+                        .single()
+                    ),
+                  `Bound Gumlet stream ${liveAssetId} to coaching session.`
+                );
+              }}
+              onCreateCoachingSessionWithStream={({ title, scheduledAt, liveAssetId, embedUrl }) => {
+                void run(
+                  () =>
+                    checked(
+                      db!
+                        .from('live_sessions')
+                        .insert({
+                          cohort_id: data.cohorts?.[0]?.id || null,
+                          title,
+                          scheduled_at: scheduledAt,
+                          duration_mins: 60,
+                          meeting_url: embedUrl,
+                          gumlet_embed_url: embedUrl,
+                          gumlet_live_asset_id: liveAssetId,
+                          recording_consent_required: true,
+                        })
+                        .select('id')
+                        .single()
+                    ),
+                  `Scheduled live coaching session "${title}" bound to Gumlet stream ${liveAssetId}.`
+                );
+              }}
+            />
+            <Panel title="Superadmin & User Role / Pathway Management">
             <p className="text-xs text-slate-300">
               Signed in as <strong>{p.email}</strong> ({formatUserRoleLabel(p.role)}). Manage user roles matched to
               pathway selections and assign Single 1-on-1 or Group Coaching Programs.
@@ -1863,6 +1918,7 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
               ))}
             </div>
           </Panel>
+          </div>
         )}
       </fieldset>
       <footer className="border-t border-slate-800 pt-5 text-xs text-slate-500">

@@ -24,6 +24,7 @@ import {
 import type { UserProfile, VerifiedOutcome } from '../../types/database.ts';
 import type { ReadinessDimension, ReadinessLevel } from '../../lib/constants.ts';
 import { summarizeReadinessMatrix } from '../../lib/pathway-rules.ts';
+import { SuperadminLiveController } from '../live/SuperadminLiveController.tsx';
 
 interface CoachConsoleProps {
   profiles: UserProfile[];
@@ -40,7 +41,7 @@ export const CoachConsole: React.FC<CoachConsoleProps> = ({
   onUpdateReadinessLevel,
   onRecordOutcome,
 }) => {
-  const [activeTab, setActiveTab] = useState<'queue' | 'readiness' | 'outcomes'>('queue');
+  const [activeTab, setActiveTab] = useState<'queue' | 'readiness' | 'outcomes' | 'live'>('queue');
   const [selectedMemberId, setSelectedMemberId] = useState<string>(profiles[0]?.id || 'sarah-vdm');
 
   // Outcome recording modal
@@ -140,9 +141,20 @@ export const CoachConsole: React.FC<CoachConsoleProps> = ({
             >
               Outcome Recording
             </button>
+            <button
+              onClick={() => setActiveTab('live')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                activeTab === 'live' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-emerald-400 hover:text-emerald-300'
+              }`}
+            >
+              Live Stream Controller
+            </button>
           </div>
         </div>
       </div>
+
+      {/* TAB 4: GUMLET LIVE STREAM CONTROLLER */}
+      {activeTab === 'live' && <SuperadminLiveController userEmail="mail@chaddewet.com" userRole="superadmin" />}
 
       {/* TAB 1: INTERVENTION QUEUE */}
       {activeTab === 'queue' && (

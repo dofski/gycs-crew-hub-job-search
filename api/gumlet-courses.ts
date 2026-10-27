@@ -84,7 +84,23 @@ export default {
       if (request.method === 'GET') {
         const url = new URL(request.url);
         const workspaceId = url.searchParams.get('workspace_id') || DEFAULT_VIDEO_WORKSPACE_ID;
+        const liveSourceId = url.searchParams.get('live_source_id') || DEFAULT_LIVE_SOURCE_ID;
         const playlistId = url.searchParams.get('playlist_id');
+        const liveAssetId = url.searchParams.get('live_asset_id');
+
+        if (liveAssetId) {
+          const [liveAsset, history] = await Promise.all([
+            gumletRequest(`/video/live/assets/${encodeURIComponent(liveAssetId)}`),
+            gumletRequest(`/video/live/assets/${encodeURIComponent(liveAssetId)}/history`).catch(() => null),
+          ]);
+          return reply(200, {
+            liveAsset: {
+              ...liveAsset,
+              embed_url: `https://play.gumlet.io/embed/live/${liveAsset?.live_asset_id || liveAssetId}`,
+            },
+            history: history?.history || history || [],
+          });
+        }
 
         if (playlistId) {
           const playlistAssets = await gumletRequest(
@@ -93,18 +109,20 @@ export default {
           return reply(200, { playlistId, ...playlistAssets });
         }
 
-        const [playlists, assets, liveAssets] = await Promise.all([
-          gumletRequest(`/video/playlist?collection_id=${encodeURIComponent(workspaceId)}`),
-          gumletRequest(`/video/assets/list/${encodeURIComponent(workspaceId)}`),
-          gumletRequest(`/video/live/assets/list/${encodeURIComponent(DEFAULT_LIVE_SOURCE_ID)}`),
+        const [playlists, assets, liveAssets, liveWorkspaces] = await Promise.all([
+          gumletRequest(`/video/playlist?collection_id=${encodeURIComponent(workspaceId)}`).catch(() => []),
+          gumletRequest(`/video/assets/list/${encodeURIComponent(workspaceId)}`).catch(() => ({ all_assets: [] })),
+          gumletRequest(`/video/live/assets/list/${encodeURIComponent(liveSourceId)}`).catch(() => ({ all_live_assets: [] })),
+          gumletRequest('/video/live/workspace').catch(() => ({ live_sources: [] })),
         ]);
 
         return reply(200, {
           workspaceId,
-          liveSourceId: DEFAULT_LIVE_SOURCE_ID,
+          liveSourceId,
           playlists,
           assets: assets?.all_assets || [],
           liveAssets: liveAssets?.all_live_assets || [],
+          liveWorkspaces: liveWorkspaces?.live_sources || liveWorkspaces || [],
         });
       }
 
@@ -239,18 +257,101 @@ export default {
         return reply(200, res);
       }
 
-      if (action === 'create_live_session_stream') {
+      if (action === 'create_live_session_stream' || action === 'create_live_asset') {
         const title = String(body.title || 'GYCS Weekly Live Coaching').trim();
+        const orientation = body.orientation === 'portrait' ? 'portrait' : 'landscape';
+        const resolutions = Array.isArray(body.resolution) && body.resolution.length > 0
+          ? body.resolution
+          : ['360p', '480p', '720p', '1080p'];
         const liveAsset = await gumletRequest('/video/live/assets', 'POST', {
           live_source_id: String(body.liveSourceId || DEFAULT_LIVE_SOURCE_ID),
-          resolution: ['360p', '480p', '720p', '1080p'],
+          resolution: resolutions,
           title,
-          orientation: 'landscape',
-          mp4_access: true,
+          orientation,
+          mp4_access: body.mp4Access !== undefined ? Boolean(body.mp4Access) : true,
+          ...(body.startAt ? { start_at: Number(body.startAt) } : {}),
         });
         return reply(200, {
           ...liveAsset,
           embed_url: `https://play.gumlet.io/embed/live/${liveAsset.live_asset_id}`,
+        });
+      }
+
+      if (action === 'get_live_asset_status') {
+        const liveAssetId = String(body.liveAssetId || body.live_asset_id || '').trim();
+        if (!liveAssetId) return reply(400, { error: 'liveAssetId is required.' });
+        const [liveAsset, history] = await Promise.all([
+          gumletRequest(`/video/live/assets/${encodeURIComponent(liveAssetId)}`),
+          gumletRequest(`/video/live/assets/${encodeURIComponent(liveAssetId)}/history`).catch(() => null),
+        ]);
+        return reply(200, {
+          ...liveAsset,
+          embed_url: `https://play.gumlet.io/embed/live/${liveAsset.live_asset_id || liveAssetId}`,
+          history: history?.history || history || [],
+        });
+      }
+
+      if (action === 'start_live' || action === 'start_live_stream') {
+        const liveAssetId = String(body.liveAssetId || body.live_asset_id || '').trim();
+        if (!liveAssetId) return reply(400, { error: 'liveAssetId is required.' });
+        const started = await gumletRequest(`/video/live/assets/${encodeURIComponent(liveAssetId)}/start`, 'POST', {});
+        return reply(200, {
+          ...started,
+          live_asset_id: liveAssetId,
+          embed_url: `https://play.gumlet.io/embed/live/${liveAssetId}`,
+        });
+      }
+
+      if (action === 'complete_live_stream') {
+        const liveAssetId = String(body.liveAssetId || body.live_asset_id || '').trim();
+        if (!liveAssetId) return reply(400, { error: 'liveAssetId is required.' });
+        const completed = await gumletRequest(
+          `/video/live/assets/${encodeURIComponent(liveAssetId)}/complete`,
+          'POST',
+          {}
+        );
+        return reply(200, {
+          ...completed,
+          live_asset_id: liveAssetId,
+          embed_url: `https://play.gumlet.io/embed/live/${liveAssetId}`,
+        });
+      }
+
+      if (action === 'update_live_asset') {
+        const liveAssetId = String(body.liveAssetId || body.live_asset_id || '').trim();
+        const title = String(body.title || '').trim();
+        if (!liveAssetId || !title) return reply(400, { error: 'liveAssetId and title are required.' });
+        const updated = await gumletRequest('/video/live/assets/update', 'POST', {
+          live_asset_id: liveAssetId,
+          title,
+          ...(body.startAt ? { start_at: Number(body.startAt) } : {}),
+        });
+        return reply(200, updated);
+      }
+
+      if (action === 'delete_live_asset') {
+        if (!['admin', 'superadmin'].includes(caller.role)) {
+          return reply(403, { error: 'Superadmin or admin role is required to delete a live asset.' });
+        }
+        const liveAssetId = String(body.liveAssetId || body.live_asset_id || '').trim();
+        if (!liveAssetId) return reply(400, { error: 'liveAssetId is required.' });
+        const deleted = await gumletRequest(`/video/live/assets/${encodeURIComponent(liveAssetId)}`, 'DELETE');
+        return reply(200, { deleted: true, live_asset_id: liveAssetId, ...deleted });
+      }
+
+      if (action === 'filter_live_assets') {
+        const liveSourceId = String(body.liveSourceId || body.live_source_id || DEFAULT_LIVE_SOURCE_ID).trim();
+        const status = body.status ? String(body.status).trim() : '';
+        const query = new URLSearchParams();
+        if (status) query.set('status', status);
+        if (body.size) query.set('size', String(body.size));
+        if (body.offset) query.set('offset', String(body.offset));
+        const qs = query.toString() ? `?${query.toString()}` : '';
+        const list = await gumletRequest(`/video/live/assets/list/${encodeURIComponent(liveSourceId)}${qs}`);
+        return reply(200, {
+          liveSourceId,
+          liveAssets: list?.all_live_assets || [],
+          totalCount: list?.total_live_asset_count ?? (list?.all_live_assets?.length || 0),
         });
       }
 

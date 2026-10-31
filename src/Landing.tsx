@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import './landing.css';
 import Reviews, {reviewCount} from './Reviews';
-import {GumletLiveEmbed, useGumletLiveStatus} from './components/live/GumletLiveStream';
 import {
   COACHING_PROGRAMMES,
   PATHWAY_ROLE_OPTIONS,
@@ -190,7 +189,6 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
   const [chosen, setChosen] = useState('');
   const [chosenProgramme, setChosenProgramme] = useState<CoachingProgrammeType | ''>('');
   const [chosenRole, setChosenRole] = useState('');
-  const {isLive} = useGumletLiveStatus();
   const icp = icps.find(i => i.id === active) || icps[0];
   const chosenIcp = icps.find(i => i.id === chosen);
   const selectedProgrammeObj = chosenProgramme ? COACHING_PROGRAMMES[chosenProgramme] : null;
@@ -281,12 +279,6 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
           </p>
         </div>
         {video}
-      </section>
-
-      <section className="gy-section" id="live-stream" aria-labelledby="live-stream-title">
-        <p className="gy-eyebrow">{isLive ? 'LIVE STREAMING NOW' : 'LIVE COACHING BROADCAST'}</p>
-        <h2 id="live-stream-title">Live Coaching Broadcast</h2>
-        <GumletLiveEmbed />
       </section>
 
       <section className="gy-section" aria-labelledby="problem-title">

@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from 'react';
 import {createClient, type Session} from '@supabase/supabase-js';
 import Landing, {type StartApplicationContext} from './Landing';
 import HomeAudioPlayer from './components/audio/HomeAudioPlayer';
-import {GumletLiveEmbed, useGumletLiveStatus} from './components/live/GumletLiveStream';
 import {ThemeSwitcher} from './lib/theme';
 import {
   COACHING_PROGRAMMES,
@@ -143,10 +142,7 @@ function Video() {
 }
 
 export default function Portal() {
-  const [view, setView] = useState(() =>
-    typeof window !== 'undefined' && window.location.hash === '#live-coaching' ? 'live' : 'home'
-  );
-  const {isLive} = useGumletLiveStatus();
+  const [view, setView] = useState('home');
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -505,9 +501,6 @@ export default function Portal() {
             <button disabled={busy} onClick={() => jumpToLandingSection('pathways')}>
               Pathways
             </button>
-            <button disabled={busy} onClick={() => go('live')}>
-              Live coaching
-            </button>
             <button className="gy-primary" disabled={busy} onClick={handleHeaderBookCall}>
               Book a Call
             </button>
@@ -569,14 +562,6 @@ export default function Portal() {
             onSignIn={() => go('signin')}
             video={<Video />}
           />
-        )}
-        {view === 'live' && (
-          <section className="gy-section" id="live-coaching">
-            <p className="gy-eyebrow">LIVE INTERACTIVE COACHING</p>
-            <h1>Live Coaching &amp; Strategy Room</h1>
-            <p className="gy-lead">Watch live coaching broadcasts and strategy breakdowns with Chad de Wet.</p>
-            <GumletLiveEmbed />
-          </section>
         )}
         {['signin', 'signup', 'reset', 'password'].includes(view) && (
           <section className="gy-auth">

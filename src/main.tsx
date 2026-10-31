@@ -7,7 +7,7 @@ applyThemeToDom(getSavedTheme());
 const root=createRoot(document.getElementById('root')!);
 const params=new URLSearchParams(window.location.search);
 const ai=params.get('ai')==='1';
-const workspace=params.get('workspace')==='1'||window.location.hash==='#location-sharing'||window.location.hash==='#live-coaching'||window.location.pathname.startsWith('/coach/');
+const workspace=params.get('workspace')==='1'||window.location.hash==='#location-sharing'||window.location.pathname.startsWith('/coach/');
 const themePreview=!ai&&!workspace&&params.get('theme')==='optimus';
 (ai?import('./AIWorkspace.tsx'):workspace?import('./App.tsx'):import('./Portal.tsx')).then(async ({default:Page})=>{
  if(themePreview){await import('./optimus-theme.css');document.body.classList.add('gy-optimus');}

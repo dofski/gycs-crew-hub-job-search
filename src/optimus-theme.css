@@ -15,7 +15,8 @@ body.gy-optimus{background:#fafbf8;color:#142822;--eye-ink:#142822;--eye-muted:#
 .gy-optimus .gy-header{max-width:1240px;padding:26px 4%;border-color:var(--eye-line)}
 .gy-optimus .gy-header .gy-brand .gy-brand-text{color:#174833;font-size:26px;letter-spacing:.03em}
 .gy-optimus .gy-header .gy-brand .gy-brand-text span{color:#52645c;font-size:8px;letter-spacing:.12em;margin-top:6px}
-.gy-optimus .gy-header nav{font-size:13px;gap:22px}
+.gy-optimus .gy-header nav{font-size:13px;gap:12px}
+.gy-optimus .gy-header nav :is(.gy-primary,.gy-outline){padding:8px 14px;min-height:36px}
 .gy-optimus .gy-main{max-width:1240px;padding:0 4% 70px}
 .gy-optimus .gy-portal :is(.gy-primary,.gy-outline){border-radius:8px;padding:13px 22px;font-size:13px;min-height:46px;transition:background .18s,box-shadow .18s}
 .gy-optimus .gy-portal .gy-primary{background:#176345;color:#fff!important;border-color:#176345;box-shadow:0 3px 0 #104b34}
@@ -91,6 +92,19 @@ body.gy-optimus{background:#fafbf8;color:#142822;--eye-ink:#142822;--eye-muted:#
 .gy-optimus dl.gy-review dt{color:#176345}
 .gy-optimus .gy-portal .gy-error{background:#fff1f0;border-color:#d5a09a;color:#8a2920!important}
 .gy-optimus .gy-portal .gy-notice{background:#edf5e7;border-color:#a4c598;color:#275433!important}
+.gy-optimus .gy-audio-player{background:#ffffff;border-color:#cedbc7;box-shadow:0 12px 32px rgba(20,40,34,.08)}
+.gy-optimus .gy-audio-player.is-playing{border-color:#176345;box-shadow:0 14px 36px rgba(23,99,69,.15)}
+.gy-optimus .gy-audio-play-btn{background:#176345;border-color:#176345;color:#ffffff}
+.gy-optimus .gy-audio-play-btn:hover{background:#104c35;border-color:#104c35}
+.gy-optimus .gy-audio-badge{color:#176345}
+.gy-optimus .gy-audio-time{color:#355347}
+.gy-optimus .gy-audio-title{color:#142822!important}
+.gy-optimus .gy-audio-seek{background:linear-gradient(90deg,#176345 var(--audio-progress,0%),#d5dfd3 var(--audio-progress,0%))!important}
+.gy-optimus .gy-audio-seek::-webkit-slider-thumb{background:#176345;border-color:#ffffff}
+.gy-optimus .gy-audio-seek::-moz-range-thumb{background:#176345;border-color:#ffffff}
+.gy-optimus .gy-audio-chip{background:#eef4ea;border-color:#b8cbb2;color:#142822}
+.gy-optimus .gy-audio-chip:hover{background:#dfeadd;border-color:#176345}
+.gy-optimus .gy-audio-source-link{color:#176345!important}
 @media(max-width:900px){.gy-optimus .gy-header{gap:20px;flex-wrap:wrap}.gy-optimus .gy-hero{padding:60px 0;gap:32px}.gy-optimus .gy-section{padding:50px 0}.gy-optimus .gy-section[aria-labelledby="problem-title"],.gy-optimus .gy-pathway,.gy-optimus .gy-about,.gy-optimus .gy-book{grid-template-columns:1fr;gap:24px}.gy-optimus .gy-portal .gy-sticky{box-shadow:0 6px 25px #14282230;bottom:calc(14px + env(safe-area-inset-bottom))}.gy-optimus .gy-portal{padding-bottom:calc(85px + env(safe-area-inset-bottom))}}
 @media(max-width:600px){.gy-optimus .gy-myeye-panel .gy-stages{grid-template-columns:1fr}.gy-optimus .gy-main{padding-left:5%;padding-right:5%}.gy-optimus .gy-card,.gy-optimus .gy-myeye-panel{padding:22px}.gy-optimus .gy-hero>div{padding:0}.gy-optimus .gy-hero .gy-eyebrow{font-size:9px;border-radius:12px}.gy-optimus .gy-hero .gy-actions>*{width:100%}.gy-optimus .gy-tabs button{flex:1 1 40%}.gy-optimus .gy-reviews{columns:1}.gy-optimus .gy-header .gy-brand .gy-brand-text{font-size:23px}.gy-optimus .gy-hero:before{animation:none;opacity:.7}.gy-optimus .gy-band{padding:40px 22px}.gy-optimus .gy-badge{margin:8px 0;display:table}}
 @media(prefers-reduced-motion:reduce){.gy-optimus .gy-hero:before{animation:none}.gy-optimus .gy-portal *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

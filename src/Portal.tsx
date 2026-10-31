@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {createClient, type Session} from '@supabase/supabase-js';
 import Landing, {type StartApplicationContext} from './Landing';
+import HomeAudioPlayer from './components/audio/HomeAudioPlayer';
 import {GumletLiveEmbed, useGumletLiveStatus} from './components/live/GumletLiveStream';
 import {ThemeSwitcher} from './lib/theme';
 import {
@@ -487,59 +488,62 @@ export default function Portal() {
   return (
     <div className="gy-portal">
       <header className="gy-header">
-        <a href="/" className="gy-brand" aria-label="Green Yacht Crew Solutions home">
-          <img src="/logo-mark.svg" alt="" width={44} height={44} />
+        <a href="./" className="gy-brand" aria-label="Green Yacht Crew Solutions home">
+          <img src="./logo-mark.svg" alt="" width={44} height={44} />
           <span className="gy-brand-text">
             GYCS<span>GREEN YACHT CREW SOLUTIONS</span>
           </span>
         </a>
-        <nav aria-label="Main navigation">
-          <button disabled={busy} onClick={() => jumpToLandingSection('coaching-programs')}>
-            Programs
-          </button>
-          <button disabled={busy} onClick={() => jumpToLandingSection('launchpad-syllabus')}>
-            8-Week Syllabus
-          </button>
-          <button disabled={busy} onClick={() => jumpToLandingSection('pathways')}>
-            Pathways
-          </button>
-          <button disabled={busy} onClick={() => go('live')}>
-            Live coaching
-          </button>
-          <button className="gy-primary" disabled={busy} onClick={handleHeaderBookCall}>
-            Book a Call
-          </button>
-          <button
-            className="gy-outline"
-            disabled={!authReady || busy}
-            onClick={() => {
-              trackStartApplicationEvent({
-                source: 'header_cta',
-                pathway: selectedPathway,
-                department: String(payload.department || 'undecided'),
-                programme: selectedProgramme,
-              });
-              handleStartApplication({source: 'header_cta'});
-            }}
-          >
-            {session ? 'My application' : 'Start your application'}
-          </button>
-          {session ? (
-            <>
-              <a className="gy-outline" href="/?workspace=1">
-                Open Crew Hub
-              </a>
-              <button disabled={busy} onClick={signout}>
-                Sign out
-              </button>
-            </>
-          ) : (
-            <button disabled={!authReady || busy} onClick={() => go('signin')}>
-              Member sign in
+        <div className="gy-header-right">
+          <nav aria-label="Main navigation">
+            <button disabled={busy} onClick={() => jumpToLandingSection('coaching-programs')}>
+              Programs
             </button>
-          )}
-          <ThemeSwitcher />
-        </nav>
+            <button disabled={busy} onClick={() => jumpToLandingSection('launchpad-syllabus')}>
+              8-Week Syllabus
+            </button>
+            <button disabled={busy} onClick={() => jumpToLandingSection('pathways')}>
+              Pathways
+            </button>
+            <button disabled={busy} onClick={() => go('live')}>
+              Live coaching
+            </button>
+            <button className="gy-primary" disabled={busy} onClick={handleHeaderBookCall}>
+              Book a Call
+            </button>
+            <button
+              className="gy-outline"
+              disabled={!authReady || busy}
+              onClick={() => {
+                trackStartApplicationEvent({
+                  source: 'header_cta',
+                  pathway: selectedPathway,
+                  department: String(payload.department || 'undecided'),
+                  programme: selectedProgramme,
+                });
+                handleStartApplication({source: 'header_cta'});
+              }}
+            >
+              {session ? 'My application' : 'Start your application'}
+            </button>
+            {session ? (
+              <>
+                <a className="gy-outline" href="/?workspace=1">
+                  Open Crew Hub
+                </a>
+                <button disabled={busy} onClick={signout}>
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <button disabled={!authReady || busy} onClick={() => go('signin')}>
+                Member sign in
+              </button>
+            )}
+            <ThemeSwitcher />
+          </nav>
+          {view === 'home' && <HomeAudioPlayer />}
+        </div>
       </header>
       <main className="gy-main">
         {!db && (

@@ -3,8 +3,8 @@
 /* Light Theme Styles for Public Portal & Landing Page */
 body.gy-light .gy-portal{background:#f8fafc;color:#0f172a}
 body.gy-light .gy-header{border-bottom:1px solid #cbd5e1}
-body.gy-light .gy-brand{color:#047857!important}
-body.gy-light .gy-brand span{color:#475569}
+body.gy-light .gy-brand,body.gy-light .gy-header .gy-brand .gy-brand-text{color:#047857!important}
+body.gy-light .gy-brand span,body.gy-light .gy-header .gy-brand .gy-brand-text span{color:#475569!important}
 body.gy-light .gy-portal h1 em,body.gy-light .gy-eyebrow,body.gy-light .gy-review dt{color:#047857!important}
 body.gy-light .gy-portal p{color:#334155}
 body.gy-light .gy-small{color:#64748b!important}
@@ -22,3 +22,64 @@ body.gy-light .gy-steps .active{background:#059669;color:#ffffff;border-color:#0
 body.gy-light .gy-disclosure{background:#f1f5f9}
 body.gy-light .gy-error{background:#fff1f2;border-color:#fda4af;color:#9f1239!important}
 body.gy-light .gy-notice{background:#ecfdf5;border-color:#6ee7b7;color:#065f46!important}
+
+/* Header Right Column & Top-Right Home Audio Player */
+.gy-header{align-items:flex-start}
+.gy-header-right{display:flex;flex-direction:column;align-items:flex-end;gap:12px;min-width:0;flex:1}
+.gy-header nav{justify-content:flex-end;gap:12px;font-size:14px}
+.gy-header nav .gy-primary,.gy-header nav .gy-outline{padding:8px 14px}
+.gy-audio-player{width:min(100%,580px);margin-left:auto;background:linear-gradient(145deg,#0d2c36,#082029);border:1px solid #31505b;border-radius:14px;padding:10px 14px;box-shadow:0 14px 36px rgba(0,0,0,.32);transition:border-color .2s,box-shadow .2s}
+.gy-audio-player.is-playing{border-color:#82edba;box-shadow:0 16px 40px rgba(0,0,0,.42),0 0 0 1px rgba(130,237,186,.28)}
+.gy-audio-main{display:flex;align-items:center;gap:12px;min-width:0}
+.gy-audio-play-btn{width:40px;height:40px;min-width:40px;border-radius:50%;border:1px solid #82edba;background:#82edba;color:#062c26;display:inline-flex;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 14px rgba(130,237,186,.24)}
+.gy-audio-play-btn:hover{background:#b4f8d8;border-color:#b4f8d8}
+.gy-audio-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.gy-audio-meta-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.gy-audio-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:1.3px;color:#82edba;line-height:1.2}
+.gy-audio-eq{display:inline-flex;align-items:flex-end;gap:2px;height:12px}
+.gy-audio-eq i{display:block;width:2.5px;height:5px;border-radius:2px;background:currentColor;transition:height .2s}
+.gy-audio-player.is-playing .gy-audio-eq i:nth-child(1){animation:gy-eq-bar .75s ease-in-out infinite alternate}
+.gy-audio-player.is-playing .gy-audio-eq i:nth-child(2){animation:gy-eq-bar .55s ease-in-out .15s infinite alternate}
+.gy-audio-player.is-playing .gy-audio-eq i:nth-child(3){animation:gy-eq-bar .65s ease-in-out .3s infinite alternate}
+@keyframes gy-eq-bar{from{height:4px}to{height:12px}}
+.gy-audio-time{font-size:12px;font-weight:600;color:#d8ecee;font-variant-numeric:tabular-nums;line-height:1.2}
+.gy-audio-title{margin:0!important;font-size:14px;font-weight:700;color:#edf7f5!important;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gy-audio-controls-row{display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
+.gy-audio-seek{flex:1 1 120px;min-width:90px;height:6px!important;margin:0!important;padding:0!important;border:0!important;border-radius:999px!important;appearance:none;-webkit-appearance:none;background:linear-gradient(90deg,#82edba var(--audio-progress,0%),#25444e var(--audio-progress,0%))!important;cursor:pointer}
+.gy-audio-seek::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:#edf7f5;border:2px solid #062c26;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.gy-audio-seek::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#edf7f5;border:2px solid #062c26;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.gy-audio-MiniActions{display:inline-flex;align-items:center;gap:5px;flex-shrink:0}
+.gy-audio-chip{font-size:12px;font-weight:600;line-height:1.2;padding:3px 7px;border-radius:6px;border:1px solid #355864;background:#09212a;color:#e4f3f1;font-variant-numeric:tabular-nums}
+.gy-audio-chip:hover{background:#163841;border-color:#82edba}
+.gy-audio-source-link{font-size:12px;font-weight:600;line-height:1.2;color:#82edba!important;text-decoration:underline;text-underline-offset:3px;padding:2px 4px;white-space:nowrap}
+.gy-audio-source-link:hover{color:#b4f8d8!important}
+.gy-audio-error{margin:2px 0 0!important;font-size:12px;color:#ffd4d4!important}
+
+/* Light Theme Overrides for Home Audio Player */
+body.gy-light .gy-audio-player{background:#ffffff;border-color:#cbd5e1;box-shadow:0 10px 28px rgba(15,23,42,.07)}
+body.gy-light .gy-audio-player.is-playing{border-color:#059669;box-shadow:0 12px 32px rgba(5,150,105,.14),0 0 0 1px rgba(5,150,105,.25)}
+body.gy-light .gy-audio-play-btn{background:#047857;border-color:#047857;color:#ffffff;box-shadow:0 4px 12px rgba(4,120,87,.22)}
+body.gy-light .gy-audio-play-btn:hover{background:#065f46;border-color:#065f46}
+body.gy-light .gy-audio-badge{color:#047857}
+body.gy-light .gy-audio-time{color:#334155}
+body.gy-light .gy-audio-title{color:#0f172a!important}
+body.gy-light .gy-audio-seek{background:linear-gradient(90deg,#047857 var(--audio-progress,0%),#cbd5e1 var(--audio-progress,0%))!important}
+body.gy-light .gy-audio-seek::-webkit-slider-thumb{background:#047857;border-color:#ffffff}
+body.gy-light .gy-audio-seek::-moz-range-thumb{background:#047857;border-color:#ffffff}
+body.gy-light .gy-audio-chip{background:#f1f5f9;border-color:#94a3b8;color:#0f172a}
+body.gy-light .gy-audio-chip:hover{background:#e2e8f0;border-color:#047857}
+body.gy-light .gy-audio-source-link{color:#047857!important}
+body.gy-light .gy-audio-source-link:hover{color:#065f46!important}
+body.gy-light .gy-audio-error{color:#9f1239!important}
+
+@media(max-width:900px){
+  .gy-header{flex-direction:column;align-items:stretch}
+  .gy-header-right{align-items:stretch;width:100%}
+  .gy-header nav{justify-content:flex-start}
+  .gy-audio-player{width:100%;margin-left:0}
+  .gy-audio-title{white-space:normal}
+  .gy-audio-controls-row{flex-direction:column;align-items:stretch;gap:8px}
+  .gy-audio-seek{flex:none;width:100%}
+  .gy-audio-MiniActions{display:flex;flex-wrap:wrap;width:100%;gap:6px}
+  .gy-audio-source-link{margin-left:auto}
+}

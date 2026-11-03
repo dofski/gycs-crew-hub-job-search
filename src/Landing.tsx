@@ -274,7 +274,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
             </button>{' '}
             ·{' '}
             <button className="gy-link" onClick={() => jump('my-eye')}>
-              Discover M/Y Eye
+              Discover Crew Atlas
             </button>
           </p>
         </div>
@@ -298,7 +298,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
         <h2 id="programs-title">Single 1-on-1 Coaching Program or Group Coaching Program.</h2>
         <p className="gy-lead">
           Every crew member starts with a personal pathway matched to their target yacht role. Choose private 1-on-1
-          mentorship or structured cohort group coaching—both backed by the GYCS Crew Hub and M/Y Eye.
+          mentorship or structured cohort group coaching—both backed by the GYCS Crew Hub and Crew Atlas.
         </p>
         <div className="gy-grid" style={{gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px'}}>
           {Object.values(COACHING_PROGRAMMES).map(prog => (
@@ -632,18 +632,18 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
 
       <section className="gy-section" id="my-eye" aria-labelledby="my-eye-title">
         <p className="gy-eyebrow">M/Y EYE · FOR GYCS CREW</p>
-        <h2 id="my-eye-title">M/Y Eye: Find Yacht Jobs With a Plan, Not Guesswork</h2>
+        <h2 id="my-eye-title">Crew Atlas: Find Yacht Jobs With a Plan, Not Guesswork</h2>
         <p className="gy-lead">
           Most new crew look for their first yacht job the hard way: walking random docks, missing the busy marinas and
-          forgetting who they spoke to. M/Y Eye turns your yacht job search into a plan. It’s a live, interactive map of
+          forgetting who they spoke to. Crew Atlas turns your yacht job search into a plan. It’s a live, interactive map of
           the world’s yachting ports. Use it to see where yachts are, plan your dockwalking route, research boats before
           you approach them and keep track of every contact. That way every day on the dock counts.
         </p>
         <p>
-          M/Y Eye works alongside your GYCS coaching. Your coach helps you decide what to aim for. M/Y Eye helps you get
+          Crew Atlas works alongside your GYCS coaching. Your coach helps you decide what to aim for. Crew Atlas helps you get
           out there and do it.
         </p>
-        <h3>What M/Y Eye helps you do</h3>
+        <h3>What Crew Atlas helps you do</h3>
         <div className="gy-grid gy-grid-3">
           {myEyeFeatures.map(([t, d]) => (
             <article className="gy-card" key={t}>
@@ -654,7 +654,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
         </div>
         <div className="gy-myeye-panel">
           <p className="gy-eyebrow">A DAILY DOCKWALKING ROUTINE</p>
-          <h3>How GYCS crew use M/Y Eye</h3>
+          <h3>How GYCS crew use Crew Atlas</h3>
           <ol className="gy-stages">
             {myEyeRoutine.map(([t, d], n) => (
               <li key={t}>
@@ -666,7 +666,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
               </li>
             ))}
           </ol>
-          <p>Want help using M/Y Eye to plan your first season?</p>
+          <p>Want help using Crew Atlas to plan your first season?</p>
           <div className="gy-actions">
             <button className="gy-primary" onClick={() => book('my_eye_routine')}>
               Book a Call
@@ -677,7 +677,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
           </div>
         </div>
         <h3>
-          Coming soon to M/Y Eye<span className="gy-badge">IN DEVELOPMENT</span>
+          Coming soon to Crew Atlas<span className="gy-badge">IN DEVELOPMENT</span>
         </h3>
         <ul className="gy-ticks">
           {myEyeSoon.map(([t, d]) => (
@@ -688,7 +688,7 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
         </ul>
         <h3>Walk the docks with a plan.</h3>
         <p>
-          Combine GYCS coaching with M/Y Eye and make every day in port count: the right marinas, the right time and a
+          Combine GYCS coaching with Crew Atlas and make every day in port count: the right marinas, the right time and a
           follow-up for every contact.
         </p>
         <div className="gy-actions">
@@ -812,14 +812,14 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
           </p>
         </details>
         <details>
-          <summary>Does M/Y Eye find me a yacht job?</summary>
+          <summary>Does Crew Atlas find me a yacht job?</summary>
           <p>
-            No tool can promise you a job. M/Y Eye helps you look for one in a smarter, more organised way. Hiring
+            No tool can promise you a job. Crew Atlas helps you look for one in a smarter, more organised way. Hiring
             decisions stay with captains, heads of department and crew agencies.
           </p>
         </details>
         <details>
-          <summary>Who can see my location on M/Y Eye?</summary>
+          <summary>Who can see my location on Crew Atlas?</summary>
           <p>When coach view is enabled, your port and vessel are visible only to you and your assigned coach.</p>
         </details>
       </section>

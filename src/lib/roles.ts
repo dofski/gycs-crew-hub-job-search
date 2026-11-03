@@ -41,12 +41,12 @@ export const COACHING_PROGRAMMES: Record<CoachingProgrammeType, CoachingProgramm
     deliveryFramework: 'The GROW Coaching Model (Goal, Reality, Obstacles, Way Forward)',
     instructor: 'Chad de Wet (Yachtmaster Offshore 200GT, Enterprise AI/API Architect)',
     summary:
-      'Private, 1-on-1 execution of the 8-Week Superyacht Career Launchpad with Chad de Wet—tailored to your baseline constraints, target department pathway, CV Studio assets, and M/Y Eye outreach.',
+      'Private, 1-on-1 execution of the 8-Week Superyacht Career Launchpad with Chad de Wet—tailored to your baseline constraints, target department pathway, CV Studio assets, and Crew Atlas outreach.',
     highlights: [
       'Phase 1 KNOW (Weeks 1–2): Private ENG1/Visa/Runway audit & Essential vs. Upsell training route',
       'Phase 2 PREPARE (Weeks 3–5): 1-on-1 CV Studio (<250KB) build, Candidate Conversion Funnel & Deployment Vault',
-      'Phase 3 EXECUTE (Weeks 6–8): Direct M/Y Eye AIS vessel outreach, 1-on-1 mock Captain/HOD interviews & SEA contract review',
-      'Direct access to GYCS Crew Hub, CV Studio, M/Y Eye, Candidate Funnel & CRM Opportunity Pipeline',
+      'Phase 3 EXECUTE (Weeks 6–8): Direct Crew Atlas AIS vessel outreach, 1-on-1 mock Captain/HOD interviews & SEA contract review',
+      'Direct access to GYCS Crew Hub, CV Studio, Crew Atlas, Candidate Funnel & CRM Opportunity Pipeline',
     ],
   },
   group: {
@@ -62,7 +62,7 @@ export const COACHING_PROGRAMMES: Record<CoachingProgrammeType, CoachingProgramm
     highlights: [
       'Phase 1 KNOW (Weeks 1–2): Career Reality Check & Route/Training Navigator (zero wasted capital)',
       'Phase 2 PREPARE (Weeks 3–5): Experience-to-CV Builder (<250KB), Candidate Funnel & Launch Readiness Planner',
-      'Phase 3 EXECUTE (Weeks 6–8): M/Y Eye Job Search Strategist, Interview Confidence Lab & 30-Day Action Blueprint',
+      'Phase 3 EXECUTE (Weeks 6–8): Crew Atlas Job Search Strategist, Interview Confidence Lab & 30-Day Action Blueprint',
       'Weekly live cohort coaching rooms, pathway-matched milestones (Deck, Interior, Eng, Galley) & CRM Pipeline',
     ],
   },

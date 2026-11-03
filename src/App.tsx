@@ -147,12 +147,12 @@ export default function App() {
             AI Intake &amp; Pathways
           </a>
           <a
-            href="https://searchengine.chaddewet.com"
+            href="https://osiris.chaddewet.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-emerald-300 underline"
           >
-            M/Y Eye Map ↗
+            Crew Atlas Map ↗
           </a>
           <ThemeSwitcher />
         </div>
@@ -568,7 +568,7 @@ function Workspace({ session, onSignOut }: { session: Session; onSignOut: () => 
     },
     {
       key: 'search_prep',
-      label: '6. M/Y Eye & CRM Outreach Pipeline',
+      label: '6. Crew Atlas & CRM Outreach Pipeline',
       level: (data.applications || []).length >= 5 ? 'coach_approved' : (data.applications || []).length > 0 ? 'in_progress' : 'not_started',
       measuredBy: 'Agency Matrix + Direct Vessel AIS Outreach',
       sourceOfTruth: `${(data.applications || []).length} Tracked Applications`,

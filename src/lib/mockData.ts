@@ -389,14 +389,14 @@ export const INITIAL_MILESTONES_SARAH: Milestone[] = [
   {
     id: 'm-6',
     pathwayId: 'pathway-sarah',
-    title: '6. Week 6: Job Search Strategist & Direct Vessel Outreach (M/Y Eye)',
-    description: 'Submit 10+ MLC-compliant crew agency registrations and catalog 20+ target vessels in your CRM Opportunity Pipeline using M/Y Eye AIS port intelligence.',
+    title: '6. Week 6: Job Search Strategist & Direct Vessel Outreach (Crew Atlas)',
+    description: 'Submit 10+ MLC-compliant crew agency registrations and catalog 20+ target vessels in your CRM Opportunity Pipeline using Crew Atlas AIS port intelligence.',
     sortOrder: 6,
     evidenceRequired: 'Live Agency Matrix & AIS Port Target Log',
     status: 'pending',
     phase: 'Phase 3: EXECUTE',
     growAnchor: 'Way Forward: Bypassing Agency Gatekeepers',
-    platformTool: 'M/Y Eye + CRM Pipeline',
+    platformTool: 'Crew Atlas + CRM Pipeline',
     primaryOutput: 'Live Agency Matrix & AIS Port Target Log',
   },
   {

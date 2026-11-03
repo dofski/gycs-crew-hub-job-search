@@ -103,7 +103,7 @@ export function CrewMapLocationSettings({
             ? 'Galley'
             : 'Crew';
 
-  const previewPlace = currentLocation?.place_label || 'Location not updated';
+  const previewPlace = currentLocation?.place_label || 'Location expired';
   const previewExpiry = currentLocation?.expires_at
     ? new Date(currentLocation.expires_at).toLocaleString()
     : null;
@@ -233,9 +233,12 @@ export function CrewMapLocationSettings({
       <section className={panelClass}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold">M/Y Eye · Private Location Sharing</h2>
+            <span className="block text-[10px] font-mono uppercase tracking-widest text-emerald-400">
+              Crew Atlas Crew Layer
+            </span>
+            <h2 className="text-lg font-bold">Location sharing</h2>
             <p className="text-xs text-slate-400">
-              Share your current port/city with your assigned GYCS coach on searchengine.chaddewet.com
+              Control whether your current port or linked vessel context is visible inside Crew Atlas to your assigned coach.
             </p>
           </div>
           <button
@@ -268,9 +271,9 @@ export function CrewMapLocationSettings({
 
       <div className="grid gap-5 md:grid-cols-2">
         <section className={panelClass}>
-          <h3 className="text-base font-bold">1. Check in at a port</h3>
+          <h3 className="text-base font-bold">Check in at a port</h3>
           <p className="text-xs text-slate-400">
-            Select a superyacht port or enter a city. Uses the port&apos;s coordinates (rounded to ~1 km) and expires in 72 hours.
+            Set your current port or city so Crew Atlas can show your latest shared position. Check-ins expire automatically.
           </p>
           {!sharingEnabled && (
             <p className="rounded-lg border border-amber-700/60 bg-amber-950/40 p-3 text-xs text-amber-200">
@@ -395,9 +398,9 @@ export function CrewMapLocationSettings({
         </section>
 
         <section className={panelClass}>
-          <h3 className="text-base font-bold">2. Link my vessel (declared by member)</h3>
+          <h3 className="text-base font-bold">Link my vessel</h3>
           <p className="text-xs text-slate-400">
-            Optional vessel declaration. On M/Y Eye, a linked vessel marker is labelled &ldquo;Vessel position (linked), not confirmed crew location&rdquo;.
+            Add a vessel you&apos;re connected to for extra context. Linked vessel data does not confirm your current onboard location. On Crew Atlas, a linked vessel marker is labelled &ldquo;Linked vessel position — not confirmed as current crew location&rdquo;.
           </p>
           <form onSubmit={handleSaveVessel} className="space-y-3">
             <label className="block text-sm">
@@ -560,7 +563,7 @@ export function CrewMapLocationSettings({
             <p className="text-xs text-slate-400">
               {currentLocation
                 ? `Port check-in · expires ${previewExpiry}`
-                : 'No active port check-in (card shows "Location not updated" and no globe marker)'}
+                : 'You haven’t checked in yet. Add your current port to appear on the map. (Card shows "Location expired")'}
             </p>
             <p className="text-xs text-slate-200">
               Skills: {previewSkills.length ? previewSkills.join(' · ') : 'none listed'}
@@ -572,7 +575,7 @@ export function CrewMapLocationSettings({
             <p className="text-xs text-slate-200">
               Vessel:{' '}
               {vesselLink?.show_on_map && vesselLink?.vessel_name
-                ? `${vesselLink.vessel_name}${vesselLink.mmsi ? ` (MMSI ${vesselLink.mmsi})` : ''} · declared by member`
+                ? `${vesselLink.vessel_name}${vesselLink.mmsi ? ` (MMSI ${vesselLink.mmsi})` : ''} · Linked vessel context available`
                 : 'none linked'}
             </p>
             <p className="text-[11px] text-slate-500 pt-1">
@@ -580,12 +583,12 @@ export function CrewMapLocationSettings({
             </p>
           </div>
           <a
-            href="https://searchengine.chaddewet.com"
+            href="https://osiris.chaddewet.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block text-xs text-emerald-300 underline"
           >
-            Open M/Y Eye map (searchengine.chaddewet.com) ↗
+            Open Crew Atlas Map (osiris.chaddewet.com) ↗
           </a>
         </section>
       </div>

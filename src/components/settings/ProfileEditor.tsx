@@ -186,7 +186,7 @@ export function ProfileEditor({
           onClick={onNavigateToLocationTab}
           className="text-xs font-semibold text-emerald-300 underline"
         >
-          Open Port Check-In &amp; M/Y Eye Map Controls →
+          Open Port Check-In &amp; Crew Atlas Map Controls →
         </button>
       </div>
 
@@ -349,7 +349,7 @@ export function ProfileEditor({
                 onChange={(e) => setSharingEnabled(e.target.checked)}
                 className="rounded accent-emerald-500"
               />
-              <span>Enable private coach profile card sharing on M/Y Eye</span>
+              <span>Enable private coach profile card sharing on Crew Atlas</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">

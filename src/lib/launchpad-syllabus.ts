@@ -66,7 +66,7 @@ export const LAUNCHPAD_COURSE_METADATA = {
     { letter: 'G', label: 'Goal', description: 'Target department, vessel tonnage, certified training route, and timeline precision.' },
     { letter: 'R', label: 'Reality', description: 'Baseline audit of ENG1 medical fitness, passport/visa constraints, cabin readiness, and financial runway.' },
     { letter: 'O', label: 'Obstacles', description: 'Eliminating predatory training bundles, static PDF inbox traps, and dockside logistical blockers.' },
-    { letter: 'W', label: 'Way Forward', description: 'SOP-translated 2-page CV, live candidate funnel, M/Y Eye AIS outreach, mock interviews, and 30-day execution sprints.' },
+    { letter: 'W', label: 'Way Forward', description: 'SOP-translated 2-page CV, live candidate funnel, Crew Atlas AIS outreach, mock interviews, and 30-day execution sprints.' },
   ],
 };
 
@@ -90,7 +90,7 @@ export const LAUNCHPAD_PHASES: LaunchpadPhaseOverview[] = [
     phase: 'PHASE 3: EXECUTE',
     weeks: 'Weeks 6–8',
     subtitle: 'Deploying direct intelligence systems, securing interviews, and turning daywork into permanent employment.',
-    bullets: ['Job Search & M/Y Eye', 'Interview Confidence Lab', '30-Day Action Blueprint'],
+    bullets: ['Job Search & Crew Atlas', 'Interview Confidence Lab', '30-Day Action Blueprint'],
   },
 ];
 
@@ -118,9 +118,9 @@ export const LAUNCHPAD_INFRASTRUCTURE: LaunchpadTechTool[] = [
   },
   {
     number: 4,
-    name: 'M/Y Eye Platform',
-    domain: 'searchengine.chaddewet.com',
-    url: 'https://searchengine.chaddewet.com',
+    name: 'Crew Atlas Platform',
+    domain: 'osiris.chaddewet.com',
+    url: 'https://osiris.chaddewet.com',
     description: 'Maritime intelligence combining AIS vessel tracking, port arrival schedules, and dockwalking logs.',
   },
   {
@@ -414,7 +414,7 @@ export const LAUNCHPAD_WEEKS: LaunchpadWeekSyllabus[] = [
     growAnchor: 'Way Forward: Bypassing Agency Gatekeepers',
     coreObjective:
       'Launch a dual-track job search combining targeted agency submissions with direct-to-vessel AIS intelligence and CRM tracking.',
-    platformTool: 'M/Y Eye + CRM Pipeline',
+    platformTool: 'Crew Atlas + CRM Pipeline',
     durationMins: 60,
     lessonType: 'practical',
     operationalLessons: [
@@ -426,7 +426,7 @@ export const LAUNCHPAD_WEEKS: LaunchpadWeekSyllabus[] = [
         ],
       },
       {
-        title: '2. Maritime Intelligence via M/Y Eye',
+        title: '2. Maritime Intelligence via Crew Atlas',
         points: [
           'Tracking AIS vessel arrivals, shipyard refit turnarounds, and repositioning cycles into key marinas.',
           'Distinguishing between charter vessels (high turnover, sudden requirements) and private programs.',
@@ -440,13 +440,13 @@ export const LAUNCHPAD_WEEKS: LaunchpadWeekSyllabus[] = [
         ],
       },
     ],
-    techDeliverable: 'Active access to M/Y Eye Maritime Intelligence and a pre-populated CRM Opportunity Pipeline.',
+    techDeliverable: 'Active access to Crew Atlas Maritime Intelligence and a pre-populated CRM Opportunity Pipeline.',
     weeklyMilestone:
       '10+ agency registrations submitted; 20+ target vessels cataloged in your CRM with follow-up triggers set.',
     primaryOutput: 'Live Agency Matrix & AIS Port Target Log',
-    assignmentTitle: 'Week 6 Deliverable: Live Agency Matrix & M/Y Eye AIS Port Target Log',
+    assignmentTitle: 'Week 6 Deliverable: Live Agency Matrix & Crew Atlas AIS Port Target Log',
     assignmentInstructions:
-      'Submit your list of 10+ MLC-compliant agency registrations and 20+ target vessels logged in your CRM Opportunity Pipeline using M/Y Eye AIS port intelligence.',
+      'Submit your list of 10+ MLC-compliant agency registrations and 20+ target vessels logged in your CRM Opportunity Pipeline using Crew Atlas AIS port intelligence.',
   },
   {
     week: 7,
@@ -948,7 +948,7 @@ export const LAUNCHPAD_WORKSHEETS: LaunchpadWeekWorksheet[] = [
         id: 'w5_f4',
         label: '4. Local SIM / eSIM, Banking & Emergency Contingency Setup',
         placeholder: 'e.g., European eSIM active (50GB data), Wise multi-currency EUR/USD IBAN account ready for SEPA daywork pay, emergency return flight reserve locked...',
-        helperText: 'Ensure you have local mobile data for M/Y Eye on the docks and a EUR/USD account to receive daywork/salary transfers.',
+        helperText: 'Ensure you have local mobile data for Crew Atlas on the docks and a EUR/USD account to receive daywork/salary transfers.',
       },
     ],
   },
@@ -956,12 +956,12 @@ export const LAUNCHPAD_WORKSHEETS: LaunchpadWeekWorksheet[] = [
     week: 6,
     phase: 'Phase 3: EXECUTE (Weeks 6–8)',
     phaseCode: 'execute',
-    worksheetTitle: 'Week 6 Worksheet: MLC Agency Matrix, M/Y Eye AIS Intelligence & CRM Pipeline',
+    worksheetTitle: 'Week 6 Worksheet: MLC Agency Matrix, Crew Atlas AIS Intelligence & CRM Pipeline',
     worksheetSubtitle:
-      'Execute a dual-track outreach campaign combining 10+ MLC-compliant crew agency registrations with M/Y Eye AIS vessel tracking and disciplined 07:30–09:00 dockwalking.',
+      'Execute a dual-track outreach campaign combining 10+ MLC-compliant crew agency registrations with Crew Atlas AIS vessel tracking and disciplined 07:30–09:00 dockwalking.',
     growPrompt:
       'WAY FORWARD — BYPASSING GATEKEEPERS: How many vessels and agencies have you contacted directly today, and when is your next scheduled follow-up in the CRM Pipeline?',
-    platformTool: 'M/Y Eye + CRM Pipeline',
+    platformTool: 'Crew Atlas + CRM Pipeline',
     primaryDeliverable: 'Live Agency Matrix & AIS Port Target Log',
     checklistItems: [
       {
@@ -978,9 +978,9 @@ export const LAUNCHPAD_WORKSHEETS: LaunchpadWeekWorksheet[] = [
       },
       {
         id: 'w6_c3',
-        category: 'M/Y Eye AIS Scan',
-        label: 'Active M/Y Eye AIS port scan completed each evening for tomorrow’s marina walk',
-        detail: 'Identify newly arrived 40m–90m+ motor/sailing yachts, shipyard refit turnarounds, and busy quays on `searchengine.chaddewet.com`.',
+        category: 'Crew Atlas AIS Scan',
+        label: 'Active Crew Atlas AIS port scan completed each evening for tomorrow’s marina walk',
+        detail: 'Identify newly arrived 40m–90m+ motor/sailing yachts, shipyard refit turnarounds, and busy quays on `osiris.chaddewet.com`.',
       },
       {
         id: 'w6_c4',
@@ -1010,9 +1010,9 @@ export const LAUNCHPAD_WORKSHEETS: LaunchpadWeekWorksheet[] = [
       },
       {
         id: 'w6_f2',
-        label: '2. M/Y Eye AIS Target Vessel Log (Vessels, LOA, Marina Berth & Charter/Private Status)',
+        label: '2. Crew Atlas AIS Target Vessel Log (Vessels, LOA, Marina Berth & Charter/Private Status)',
         placeholder: 'e.g., 1) M/Y [Name] (55m Feadship, Port Vauban IYCA, Charter — high turnover) | 2) M/Y [Name] (48m Benetti, Quay C, Post-Refit)...',
-        helperText: 'List your priority target vessels identified on M/Y Eye (`searchengine.chaddewet.com`) and logged in your CRM Pipeline.',
+        helperText: 'List your priority target vessels identified on Crew Atlas (`osiris.chaddewet.com`) and logged in your CRM Pipeline.',
       },
       {
         id: 'w6_f3',
@@ -1157,7 +1157,7 @@ export const LAUNCHPAD_WORKSHEETS: LaunchpadWeekWorksheet[] = [
       {
         id: 'w8_f1',
         label: '1. Rolling 30-Day Execution Sprint Schedule (Daily Rhythm & Weekly KPIs)',
-        placeholder: 'e.g., Mon–Fri: 07:30–09:00 Dockwalk (10 vessels/day) → 10:00–12:00 Agency Check-ins & CV Tailoring → 15:00–17:00 Afternoon Dock Sweep → 18:00 M/Y Eye & CRM Update...',
+        placeholder: 'e.g., Mon–Fri: 07:30–09:00 Dockwalk (10 vessels/day) → 10:00–12:00 Agency Check-ins & CV Tailoring → 15:00–17:00 Afternoon Dock Sweep → 18:00 Crew Atlas & CRM Update...',
         helperText: 'Define your non-negotiable daily routine and weekly targets (vessels approached, daywork days, interviews).',
       },
       {
@@ -1286,7 +1286,7 @@ export function generateClientWorkbookMarkdown(
     `* **Crew Member:** ${memberName || 'GYCS Client'}`,
     `* **Target Pathway Role:** ${targetRole || 'Superyacht Crew'}`,
     `* **Coaching Program:** ${coachingProgramme || '8-Week Superyacht Career Launchpad'}`,
-    `* **Core Platform Stack:** GYCS Crew Hub (https://hub.chaddewet.com) · CV Studio · M/Y Eye (https://searchengine.chaddewet.com) · Candidate Funnel · CRM Pipeline`,
+    `* **Core Platform Stack:** GYCS Crew Hub (https://hub.chaddewet.com) · CV Studio · Crew Atlas (https://osiris.chaddewet.com) · Candidate Funnel · CRM Pipeline`,
     '',
     '---',
     '',

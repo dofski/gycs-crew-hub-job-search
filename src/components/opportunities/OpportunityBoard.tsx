@@ -109,14 +109,15 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
     return edgeData;
   }
 
-  const executeLiveSearch = async (pageToLoad: number) => {
+  const executeLiveSearch = async (pageToLoad: number, queryOverride?: string) => {
+    const activeQuery = (queryOverride !== undefined ? queryOverride : searchQuery).trim() || 'yacht crew';
     setSearching(true);
     setSearchError('');
     setHasSearched(true);
     try {
       const res = await callJobSearchProxy({
         action: 'search_jobs',
-        query: searchQuery.trim() || 'yacht crew',
+        query: activeQuery,
         page: pageToLoad,
         country: searchCountry.trim(),
         date_posted: datePosted,
@@ -299,12 +300,51 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
               <Globe className="w-4 h-4" />
-              <span>Authenticated Live Job Search (JSearch Mega API) &amp; Agency Contact Lookup</span>
+              <span>Crew Atlas Opportunity Context · JSearch Mega API</span>
             </div>
             <h3 className="text-base font-bold text-white mt-0.5">
               Search Real-Time Maritime &amp; Yacht Crew Vacancies
             </h3>
           </div>
+          <a
+            href="https://osiris.chaddewet.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-amber-500/30 text-amber-300 text-xs font-semibold transition"
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            <span>Open Crew Atlas Map</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {[
+            { label: 'Yacht Deckhand', query: 'yacht deckhand' },
+            { label: 'Stewardess / Interior', query: 'yacht stewardess interior crew' },
+            { label: 'Marine Engineer', query: 'yacht marine engineer' },
+            { label: 'Yacht Chef', query: 'yacht chef galley' },
+            { label: 'Bosun / Mate', query: 'yacht bosun chief officer' },
+            { label: 'Yacht Captain', query: 'yacht captain master' },
+            { label: 'Electro-Technical (ETO)', query: 'marine electro technical officer eto' },
+            { label: 'Shipyard & Refit', query: 'yacht refit technician marine' },
+          ].map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => {
+                setSearchQuery(preset.query);
+                void executeLiveSearch(1, preset.query);
+              }}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-mono border transition ${
+                searchQuery.toLowerCase() === preset.query.toLowerCase()
+                  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold'
+                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
         </div>
 
         <form onSubmit={handleLiveSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -326,14 +366,19 @@ export const OpportunityBoard: React.FC<OpportunityBoardProps> = ({
               className="w-full bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-xl px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
               <option value="">All Countries</option>
+              <option value="us">United States (US)</option>
               <option value="fr">France (FR)</option>
               <option value="es">Spain (ES)</option>
               <option value="it">Italy (IT)</option>
-              <option value="us">United States (US)</option>
+              <option value="mc">Monaco (MC)</option>
               <option value="gb">United Kingdom (GB)</option>
-              <option value="za">South Africa (ZA)</option>
+              <option value="nl">Netherlands (NL)</option>
               <option value="gr">Greece (GR)</option>
+              <option value="hr">Croatia (HR)</option>
+              <option value="me">Montenegro (ME)</option>
+              <option value="za">South Africa (ZA)</option>
               <option value="au">Australia (AU)</option>
+              <option value="bs">Bahamas (BS)</option>
             </select>
           </div>
           <div className="sm:col-span-2">

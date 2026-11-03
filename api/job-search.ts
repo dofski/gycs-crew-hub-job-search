@@ -108,6 +108,7 @@ export default {
       const origin = request.headers.get('origin');
       const allowed = [
         'https://hub.chaddewet.com',
+        'https://osiris.chaddewet.com',
         'https://gycs-crew-hub-job-search.vercel.app',
         ...(process.env.VERCEL_URL ? ['https://' + process.env.VERCEL_URL] : []),
       ];

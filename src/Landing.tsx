@@ -234,12 +234,12 @@ export default function Landing({session, canStart, onStart, onSignIn, video}: P
 
   return (
     <>
-      <section className="gy-hero">
+      <section className="gy-hero" aria-labelledby="hero-title">
         <div>
           <p className="gy-eyebrow">
             FIND YOUR DIRECTION. PRIORITISE YOUR PREPARATION. PRESENT YOUR VALUE. ORGANISE YOUR SEARCH.
           </p>
-          <h1>
+          <h1 id="hero-title">
             Your yacht career needs a clear next step.
             <br />
             <em>Not another conflicting opinion.</em>

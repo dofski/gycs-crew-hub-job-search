@@ -680,23 +680,25 @@ export default function Portal() {
         {view === 'intake' &&
           (!session ? (
             <section className="gy-card">
-              <h2>Sign in to save your progress</h2>
+              <h1>Sign in to save your progress</h1>
               <button className="gy-primary" onClick={() => go('signin')}>
                 Sign in
               </button>
             </section>
           ) : loading ? (
-            <p role="status">Loading your saved onboarding…</p>
+            <section className="gy-card">
+              <h1>Loading your saved onboarding…</h1>
+            </section>
           ) : !profile ? (
             <section className="gy-card">
-              <h2>We could not load your profile</h2>
+              <h1>We could not load your profile</h1>
               <button className="gy-primary" onClick={() => setRetry(retry + 1)}>
                 Retry
               </button>
             </section>
           ) : !isCrewRole(profile.role) ? (
             <section className="gy-card">
-              <h2>Your staff workspace ({formatUserRoleLabel(profile.role)})</h2>
+              <h1>Your staff workspace ({formatUserRoleLabel(profile.role)})</h1>
               <p>This intake is for crew members. Your staff role ({profile.role}) has not been changed.</p>
               <a className="gy-primary" href="/?workspace=1">
                 Open Crew Hub
